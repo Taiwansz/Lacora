@@ -7,7 +7,7 @@ import { exportToCSV, generateSimplePDF } from '@/lib/utils';
 import { Users, Plus, Download, Upload, QrCode, CheckCircle2, XCircle, Search, Filter, ShieldAlert, Heart } from 'lucide-react';
 
 export default function ConvidadosPage() {
-  const { guests, addGuest, updateGuestRSVP, toggleGuestCheckIn, deleteGuest, importGuestsFromCSV } = useAppStore();
+  const { guests, addGuest, updateGuestRSVP, toggleGuestCheckIn, deleteGuest, importGuestsCSV } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'todos' | 'confirmado' | 'recusado' | 'pendente'>('todos');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -115,7 +115,6 @@ export default function ConvidadosPage() {
 
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface p-4 rounded-2xl border border-border">
-        {/* Search Input */}
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -127,7 +126,6 @@ export default function ConvidadosPage() {
           />
         </div>
 
-        {/* Status Tabs */}
         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
           {(['todos', 'confirmado', 'pendente', 'recusado'] as const).map((st) => (
             <button
@@ -164,7 +162,6 @@ export default function ConvidadosPage() {
             <tbody className="divide-y divide-border">
               {filteredGuests.map((guest) => (
                 <tr key={guest.id} className="hover:bg-surface-muted/40 transition-colors">
-                  {/* QR Check-In Toggle */}
                   <td className="p-4">
                     <button
                       onClick={() => toggleGuestCheckIn(guest.id)}
