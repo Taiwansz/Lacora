@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', Inter, sans-serif;
+}
+
+body {
+  background-color: #FAF8F5;
+  color: #1E293B;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-serif-title {
+  font-family: var(--font-serif);
+}
+
+/* Glassmorphism Card Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(230, 223, 213, 0.7);
+}
+
+.marsala-gradient {
+  background: linear-gradient(135deg, #8B263E 0%, #5E1828 100%);
+}
+
+.champagne-badge {
+  background: linear-gradient(135deg, #FDFBF7 0%, #F4F0EA 100%);
+  border: 1px solid #E5D3B3;
+  color: #8B263E;
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
