@@ -2,14 +2,15 @@
 
 import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { UserRole } from '@/types';
 import { Settings, Shield, Plus, UserPlus, RefreshCw, Key } from 'lucide-react';
 
 export default function ConfiguracoesPage() {
-  const { coupleProfile, updateCoupleProfile, activeRole, setActiveRole, resetToDemoData } = useAppStore();
+  const { coupleProfile, updateCoupleProfile, getCurrentRole } = useAppStore();
   const [partner1, setPartner1] = useState(coupleProfile.partner1Name);
   const [partner2, setPartner2] = useState(coupleProfile.partner2Name);
   const [budget, setBudget] = useState(coupleProfile.totalBudgetPlanned);
+
+  const currentRole = getCurrentRole();
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +27,10 @@ export default function ConfiguracoesPage() {
       <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle">
         <h1 className="font-serif text-2xl font-bold text-charcoal flex items-center gap-2">
           <Settings className="w-6 h-6 text-marsala-500" />
-          Configurações do Workspace & Permissões RBAC
+          Configurações do Casamento
         </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Gerencie permissões de colaboradores, cerimonialistas, fornecedores e parâmetros do casamento.
+          Gerencie os parâmetros do casamento, nomes do casal, fuso horário e teto orçamentário.
         </p>
       </div>
 
