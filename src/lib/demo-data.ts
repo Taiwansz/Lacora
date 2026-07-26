@@ -500,7 +500,6 @@ export const demoBudgetItems: BudgetItem[] = [
     negotiatedCost: 57600,
     contractedCost: 57600,
     paidAmount: 38400,
-    costPerGuest: 320,
     payerName: 'Casal (60%)',
     notes: 'Incluso coquetel volante, jantar 4 tempos, bar de drinks clássicos e mesa de café.',
   },
@@ -516,7 +515,6 @@ export const demoBudgetItems: BudgetItem[] = [
     negotiatedCost: 12500,
     contractedCost: 12500,
     paidAmount: 7500,
-    costPerGuest: 69.44,
     payerName: 'Pais da Noiva',
   },
   {
@@ -531,7 +529,6 @@ export const demoBudgetItems: BudgetItem[] = [
     negotiatedCost: 22000,
     contractedCost: 22000,
     paidAmount: 5000,
-    costPerGuest: 122.22,
     payerName: 'Casal',
   },
 ];
