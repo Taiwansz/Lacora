@@ -41,6 +41,7 @@ export const demoCoupleProfile: CoupleProfile = {
   culturalTraditions: 'Cerimônia das Areias e Bênção das Alianças pelos Avós',
   accessibilityNeeds: 'Rampa de acesso ao altar e 2 convidados cadeirantes com mesas próximas ao banheiro acessível',
   availableWeeklyHours: 8,
+  customSlug: 'matheus-virginia-2026',
   status: 'active',
 };
 
