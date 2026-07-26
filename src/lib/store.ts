@@ -320,10 +320,17 @@ export const useAppStore = create<AppStoreState>()(
       // Auth Implementation
       login: (email, pass) => {
         const cleanEmail = email.trim().toLowerCase();
+
+        // Se for o e-mail de demonstração, ativa o modo demo com dados fictícios
+        if (cleanEmail === 'demo@nossograndedia.app') {
+          get().enterDemoMode();
+          return { success: true };
+        }
+
         const users = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('nosso_users') || '[]') : [];
         let user = users.find((u: User) => u.email.toLowerCase() === cleanEmail);
 
-        if (!user && cleanEmail !== 'demo@nossograndedia.app') {
+        if (!user) {
           // Reconhecimento de parceira (Virginia Larré)
           const formattedName = cleanEmail === 'vlarre12@gmail.com'
             ? 'Virginia Larré'
@@ -343,19 +350,21 @@ export const useAppStore = create<AppStoreState>()(
           }
         }
 
-        const validUser: User = user || {
-          id: 'user-auth-real',
-          name: cleanEmail.split('@')[0] || 'Usuário',
-          email: cleanEmail,
-          emailVerified: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        const validUser: User = user;
 
         set({
           currentUser: validUser,
           isAuthenticated: true,
         });
+
+        // Se o workspace ativo for o de demonstração, cria/inicializa um workspace REAL limpo para o usuário
+        const activeWs = get().workspaces.find((w) => w.id === get().activeWorkspaceId);
+        if (!activeWs || activeWs.isDemoWorkspace || get().activeWorkspaceId === DEMO_WORKSPACE_ID) {
+          const partner1 = cleanEmail === 'vlarre12@gmail.com' ? 'Virginia' : validUser.name.split(' ')[0];
+          const partner2 = cleanEmail === 'vlarre12@gmail.com' ? 'Noivo' : 'Noiva';
+          get().createNewRealWorkspace(`Casamento de ${validUser.name}`, partner1, partner2);
+        }
+
         SupabaseService.signInUser(cleanEmail, pass);
         return { success: true };
       },
@@ -483,6 +492,7 @@ export const useAppStore = create<AppStoreState>()(
           activeWorkspaceId: newWsId,
           coupleProfile: emptyCoupleProfile,
           guests: [],
+          tables: [],
           tasks: [],
           vendors: [],
           budgetItems: [],
