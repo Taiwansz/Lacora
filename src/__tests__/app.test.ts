@@ -95,4 +95,52 @@ describe('Gerenciamento de Estado & Isolamento de Workspaces', () => {
     expect(metrics.contractedCostPerGuest).toBe(500); // 50.000 / 100
     expect(metrics.paidCostPerGuest).toBe(200); // 20.000 / 100
   });
+
+  it('deve permitir criação, atualização, alocação de convidado e remoção de mesa', () => {
+    const store = useAppStore.getState();
+
+    // 1. Criar mesa
+    store.addTable({
+      name: 'Mesa Família Noiva',
+      shape: 'redonda',
+      capacity: 8,
+      zone: 'reservado',
+      posX: 0,
+      posY: 0,
+    });
+
+    let state = useAppStore.getState();
+    const createdTable = state.tables.find((t) => t.name === 'Mesa Família Noiva');
+    expect(createdTable).toBeDefined();
+    expect(createdTable?.capacity).toBe(8);
+
+    // 2. Alocar convidado à mesa
+    useAppStore.setState({
+      guests: [
+        {
+          id: 'g-1',
+          fullName: 'Maria da Silva',
+          relationship: 'familia_noiva',
+          category: 'pais',
+          ageType: 'adulto',
+          invitationType: 'individual',
+          allowedPlusOnes: 0,
+          status: 'confirmado',
+          eventsPermitted: [],
+          qrCodeToken: 'tok1',
+          checkedIn: false,
+        },
+      ],
+    });
+
+    store.assignGuestToSeat('g-1', createdTable!.id);
+    state = useAppStore.getState();
+    expect(state.guests[0].tableId).toBe(createdTable!.id);
+
+    // 3. Excluir a mesa e verificar desvinculação automática do convidado
+    store.deleteTable(createdTable!.id);
+    state = useAppStore.getState();
+    expect(state.tables.find((t) => t.id === createdTable!.id)).toBeUndefined();
+    expect(state.guests[0].tableId).toBeUndefined();
+  });
 });

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { SupabaseService } from './supabase-service';
 import {
   User,
   UserRole,
@@ -147,6 +148,9 @@ export interface AppStoreState {
   deleteOutfit: (id: string) => void;
 
   assignGuestToSeat: (guestId: string, tableId: string, seatId?: string) => void;
+  addTable: (table: Omit<Table, 'id' | 'workspaceId'>) => void;
+  updateTable: (id: string, data: Partial<Table>) => void;
+  deleteTable: (id: string) => void;
   addVenue: (venue: Omit<Venue, 'id' | 'workspaceId'>) => void;
   addDocument: (doc: Omit<Document, 'id' | 'workspaceId' | 'uploadedAt'>) => void;
   deleteDocument: (id: string) => void;
@@ -708,10 +712,35 @@ export const useAppStore = create<AppStoreState>()(
       deleteOutfit: (id) =>
         set((state) => ({ outfits: state.outfits.filter((o) => o.id !== id) })),
 
-      assignGuestToSeat: (guestId, tableId, seatId) =>
+      assignGuestToSeat: (guestId, tableId, seatId) => {
         set((state) => ({
           guests: state.guests.map((g) => (g.id === guestId ? { ...g, tableId, seatId } : g)),
-        })),
+        }));
+        SupabaseService.assignGuestToTable(guestId, tableId || null);
+      },
+
+      addTable: (tableData) => {
+        const workspaceId = get().activeWorkspaceId;
+        const newTable = { ...tableData, id: `tbl-${Date.now()}`, workspaceId };
+        set((state) => ({ tables: [...state.tables, newTable] }));
+        SupabaseService.saveTable(newTable);
+      },
+
+      updateTable: (id, data) => {
+        set((state) => ({
+          tables: state.tables.map((t) => (t.id === id ? { ...t, ...data } : t)),
+        }));
+        const updatedTable = get().tables.find((t) => t.id === id);
+        if (updatedTable) SupabaseService.saveTable(updatedTable);
+      },
+
+      deleteTable: (id) => {
+        set((state) => ({
+          tables: state.tables.filter((t) => t.id !== id),
+          guests: state.guests.map((g) => (g.tableId === id ? { ...g, tableId: undefined, seatId: undefined } : g)),
+        }));
+        SupabaseService.deleteTable(id);
+      },
 
       addVenue: (venueData) =>
         set((state) => ({
