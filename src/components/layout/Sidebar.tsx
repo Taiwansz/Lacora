@@ -1,123 +1,178 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Compass,
-  Palette,
-  Shirt,
   CheckSquare,
+  ShieldAlert,
   Users,
-  Globe,
+  UserCheck,
+  Plane,
   DollarSign,
   Briefcase,
   FileText,
-  FileCheck,
+  Palette,
+  Shirt,
+  Flower2,
   MapPin,
   Utensils,
   Grid,
-  Flower2,
   Clock,
-  ShieldAlert,
-  Plane,
-  FileSpreadsheet,
+  Globe,
   Settings,
-  HeartHandshake
+  Shield,
+  Bell,
+  CreditCard,
+  Lock,
+  History,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-  badge?: string;
+interface NavGroup {
+  title: string;
+  items: { label: string; href: string; icon: React.ElementType }[];
 }
 
-export const sidebarItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Onboarding', href: '/onboarding', icon: Compass },
-  { label: 'Estúdio de Estilo', href: '/estilo', icon: Palette },
-  { label: 'Vestuário & Beleza', href: '/vestuario', icon: Shirt },
-  { label: 'Checklist Inteligente', href: '/checklist', icon: CheckSquare },
-  { label: 'CRM de Convidados', href: '/convidados', icon: Users },
-  { label: 'Site Público & RSVP', href: '/site', icon: Globe },
-  { label: 'Orçamento & Finanças', href: '/orcamento', icon: DollarSign },
-  { label: 'Pipeline Fornecedores', href: '/fornecedores', icon: Briefcase },
-  { label: 'Cofre de Documentos', href: '/documentos', icon: FileText },
-  { label: 'Casamento Civil', href: '/civil', icon: FileCheck },
-  { label: 'Locais & Espaços', href: '/locais', icon: MapPin },
-  { label: 'Cerimônia & Recepção', href: '/evento', icon: Utensils },
-  { label: 'Mapa de Mesas', href: '/mesas', icon: Grid },
-  { label: 'Decoração & Flores', href: '/decoracao', icon: Flower2 },
-  { label: 'Cronograma do Dia', href: '/dia-h', icon: Clock },
-  { label: 'Plano de Contingência', href: '/contingencia', icon: ShieldAlert },
-  { label: 'Lua de Mel & Pós', href: '/pos-casamento', icon: Plane },
-  { label: 'Relatórios & LGPD', href: '/relatorios', icon: FileSpreadsheet },
+export const navGroups: NavGroup[] = [
+  {
+    title: 'Planejamento',
+    items: [
+      { label: 'Visão Geral', href: '/dashboard', icon: LayoutDashboard },
+      { label: 'Onboarding', href: '/onboarding', icon: Compass },
+      { label: 'Checklist', href: '/checklist', icon: CheckSquare },
+      { label: 'Contingência & Riscos', href: '/contingencia', icon: ShieldAlert },
+    ],
+  },
+  {
+    title: 'Pessoas',
+    items: [
+      { label: 'CRM de Convidados', href: '/convidados', icon: Users },
+      { label: 'Equipe & Permissões', href: '/equipe', icon: UserCheck },
+      { label: 'Lua de Mel & Pós', href: '/pos-casamento', icon: Plane },
+    ],
+  },
+  {
+    title: 'Financeiro',
+    items: [
+      { label: 'Orçamento', href: '/orcamento', icon: DollarSign },
+      { label: 'Fornecedores', href: '/fornecedores', icon: Briefcase },
+      { label: 'Documentos & Contratos', href: '/documentos', icon: FileText },
+    ],
+  },
+  {
+    title: 'Estilo',
+    items: [
+      { label: 'Identidade Visual', href: '/estilo', icon: Palette },
+      { label: 'Vestuário & Beleza', href: '/vestuario', icon: Shirt },
+      { label: 'Decoração & Flores', href: '/decoracao', icon: Flower2 },
+    ],
+  },
+  {
+    title: 'Evento',
+    items: [
+      { label: 'Locais & Espaços', href: '/locais', icon: MapPin },
+      { label: 'Cerimônia & Recepção', href: '/evento', icon: Utensils },
+      { label: 'Mapa de Mesas', href: '/mesas', icon: Grid },
+      { label: 'Cronograma (Dia H)', href: '/dia-h', icon: Clock },
+    ],
+  },
+  {
+    title: 'Site & Mídia',
+    items: [
+      { label: 'Site do Casal & RSVP', href: '/site', icon: Globe },
+      { label: 'Casamento Civil', href: '/civil', icon: FileText },
+    ],
+  },
+  {
+    title: 'Configurações',
+    items: [
+      { label: 'Minha Conta', href: '/conta', icon: Settings },
+      { label: 'Configurações', href: '/configuracoes', icon: Settings },
+      { label: 'Notificações', href: '/notificacoes', icon: Bell },
+      { label: 'Assinatura', href: '/assinatura', icon: CreditCard },
+      { label: 'Privacidade & LGPD', href: '/privacidade', icon: Lock },
+      { label: 'Auditoria & Logs', href: '/auditoria', icon: History },
+    ],
+  },
 ];
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  const toggleGroup = (title: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
 
   return (
     <aside className="w-64 bg-surface border-r border-border min-h-screen hidden md:flex flex-col no-print shrink-0">
       {/* Brand Header */}
       <div className="p-6 border-b border-border flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl marsala-gradient flex items-center justify-center text-white shadow-subtle">
-          <HeartHandshake className="w-5 h-5" />
+        <div className="w-8 h-8 rounded-xl marsala-gradient flex items-center justify-center text-white font-serif font-bold text-sm shadow-subtle">
+          ND
         </div>
         <div>
-          <span className="font-serif font-bold text-lg text-charcoal block leading-none">
+          <span className="font-serif font-bold text-base text-charcoal block leading-none">
             Nosso Grande Dia
           </span>
-          <span className="text-[10px] uppercase tracking-wider font-semibold text-rose-500 mt-1 block">
-            Plataforma SaaS Premium
+          <span className="text-[10px] text-slate-400 font-medium block mt-1">
+            Gestão de Casamentos
           </span>
         </div>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
-        {sidebarItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href || (pathname === '/' && item.href === '/dashboard');
+      {/* Grouped Navigation Accordion */}
+      <nav className="flex-1 p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-120px)]">
+        {navGroups.map((group) => {
+          const isCollapsed = collapsedGroups[group.title];
+          const hasActiveChild = group.items.some((item) => pathname === item.href);
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group',
-                isActive
-                  ? 'bg-marsala-500 text-white shadow-card font-semibold'
-                  : 'text-slate-600 hover:bg-surface-muted hover:text-marsala-500'
+            <div key={group.title} className="space-y-1">
+              <button
+                onClick={() => toggleGroup(group.title)}
+                className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-charcoal transition-colors"
+              >
+                <span>{group.title}</span>
+                {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+
+              {!isCollapsed && (
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150',
+                          isActive
+                            ? 'bg-marsala-500 text-white font-semibold shadow-card'
+                            : 'text-slate-600 hover:bg-surface-muted hover:text-marsala-500'
+                        )}
+                      >
+                        <Icon className={cn('w-4 h-4 shrink-0', isActive ? 'text-white' : 'text-slate-400')} />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               )}
-            >
-              <Icon
-                className={cn(
-                  'w-4 h-4 transition-transform group-hover:scale-110',
-                  isActive ? 'text-white' : 'text-slate-400 group-hover:text-marsala-500'
-                )}
-              />
-              <span>{item.label}</span>
-              {item.badge && (
-                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-rose-100 text-marsala-500 font-bold">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
+            </div>
           );
         })}
       </nav>
 
-      {/* Footer Branding */}
-      <div className="p-4 border-t border-border bg-surface-muted/50 text-center">
-        <p className="text-[11px] text-slate-500">
-          Nosso Grande Dia &copy; 2026
-        </p>
-        <p className="text-[10px] text-slate-400 mt-0.5">
-          Gestão Inteligente & Isolamento LGPD
-        </p>
+      {/* Footer */}
+      <div className="p-4 border-t border-border text-center text-[10px] text-slate-400">
+        Nosso Grande Dia &copy; 2026
       </div>
     </aside>
   );

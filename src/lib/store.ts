@@ -1,16 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
+  User,
   UserRole,
+  Membership,
+  WeddingWorkspace,
   CoupleProfile,
   Guest,
   Household,
   Task,
+  TaskStatus,
   Vendor,
   BudgetItem,
   Payment,
   Palette,
-  PaletteColor,
   Outfit,
   Venue,
   Table,
@@ -23,7 +26,9 @@ import {
   Notification,
   MoodboardItem,
   DecorItem,
-  MenuItem
+  MenuItem,
+  RiskItem,
+  CivilWeddingInfo
 } from '../types';
 import {
   DEMO_WORKSPACE_ID,
@@ -46,13 +51,17 @@ import {
   demoActivityLog
 } from './demo-data';
 
-export interface ApplicationState {
-  // Active Tenant / Workspace State
+export interface AppStoreState {
+  // Authentication & Session
+  currentUser: User | null;
+  isAuthenticated: boolean;
+
+  // Workspaces & Real RBAC Memberships
   activeWorkspaceId: string;
-  activeRole: UserRole;
-  workspaces: { id: string; name: string; slug: string }[];
-  
-  // Entities Store
+  workspaces: WeddingWorkspace[];
+  memberships: Membership[];
+
+  // Workspace Content Collections
   coupleProfile: CoupleProfile;
   palette: Palette;
   venues: Venue[];
@@ -74,60 +83,88 @@ export interface ApplicationState {
   moodboard: MoodboardItem[];
   decorItems: DecorItem[];
   menuItems: MenuItem[];
+  risks: RiskItem[];
+  civilInfo: CivilWeddingInfo;
 
-  // Actions & Cross-module triggers
+  // Website Custom Editor Settings
+  websiteSettings: {
+    title: string;
+    storyText: string;
+    dressCodeNotes: string;
+    lodgingNotes: string;
+    isPublished: boolean;
+    customSlug: string;
+  };
+
+  // Auth Actions
+  login: (email: string, pass: string) => { success: boolean; error?: string };
+  signup: (name: string, email: string, pass: string) => { success: boolean; error?: string };
+  logout: () => void;
+  verifyEmail: () => void;
+  updatePassword: (newPass: string) => void;
+  deleteAccount: () => void;
+  enterDemoMode: () => void;
+
+  // Workspace & Membership Actions
   setActiveWorkspace: (workspaceId: string) => void;
-  setActiveRole: (role: UserRole) => void;
-  createNewWorkspace: (name: string, coupleNames: string) => void;
-  resetToDemoData: () => void;
+  createNewRealWorkspace: (weddingName: string, partner1: string, partner2: string) => void;
+  deleteCurrentWorkspace: () => void;
+  inviteTeamMember: (email: string, role: UserRole) => void;
 
   // Onboarding
-  completeOnboarding: (data: Partial<CoupleProfile>) => void;
+  completeRealOnboarding: (data: Partial<CoupleProfile>) => void;
 
-  // Couple Profile
+  // Current User Active Role in Active Workspace
+  getCurrentRole: () => UserRole;
+  isCurrentUserAdmin: () => boolean;
+
+  // Module Actions
   updateCoupleProfile: (data: Partial<CoupleProfile>) => void;
-
-  // Tasks (Checklist)
   addTask: (task: Omit<Task, 'id' | 'workspaceId' | 'attachmentsCount' | 'commentsCount'>) => void;
-  updateTaskStatus: (id: string, status: Task['status']) => void;
+  updateTaskStatus: (id: string, status: TaskStatus) => void;
   deleteTask: (id: string) => void;
 
-  // Guests & RSVP
   addGuest: (guest: Omit<Guest, 'id' | 'workspaceId' | 'qrCodeToken' | 'checkedIn'>) => void;
+  updateGuest: (id: string, data: Partial<Guest>) => void;
   updateGuestRSVP: (guestId: string, status: Guest['status'], notes?: string) => void;
   toggleGuestCheckIn: (guestId: string) => void;
-  importGuestsFromCSV: (guestList: Partial<Guest>[]) => void;
+  importGuestsCSV: (list: Partial<Guest>[]) => { added: number; duplicates: number };
   deleteGuest: (id: string) => void;
 
-  // Budget & Payments
-  addBudgetItem: (item: Omit<BudgetItem, 'id' | 'workspaceId' | 'paidAmount' | 'costPerGuest'>) => void;
+  addBudgetItem: (item: Omit<BudgetItem, 'id' | 'workspaceId' | 'paidAmount'>) => void;
+  updateBudgetItem: (id: string, data: Partial<BudgetItem>) => void;
+  deleteBudgetItem: (id: string) => void;
   addPayment: (payment: Omit<Payment, 'id' | 'workspaceId'>) => void;
   markPaymentAsPaid: (paymentId: string) => void;
 
-  // Vendors
   addVendor: (vendor: Omit<Vendor, 'id' | 'workspaceId'>) => void;
   updateVendorStatus: (id: string, status: Vendor['status']) => void;
+  deleteVendor: (id: string) => void;
 
-  // Palette & Visual Identity
   updatePaletteColor: (colorId: string, hex: string, name?: string) => void;
-
-  // Outfits
   addOutfit: (outfit: Omit<Outfit, 'id' | 'workspaceId'>) => void;
   updateOutfitStatus: (id: string, status: Outfit['status']) => void;
+  deleteOutfit: (id: string) => void;
 
-  // Tables & Seating
   assignGuestToSeat: (guestId: string, tableId: string, seatId?: string) => void;
-
-  // Documents
+  addVenue: (venue: Omit<Venue, 'id' | 'workspaceId'>) => void;
   addDocument: (doc: Omit<Document, 'id' | 'workspaceId' | 'uploadedAt'>) => void;
+  deleteDocument: (id: string) => void;
 
-  // Timeline
   addTimelineItem: (item: Omit<TimelineItem, 'id' | 'workspaceId'>) => void;
+  addRiskItem: (risk: Omit<RiskItem, 'id' | 'workspaceId'>) => void;
+  updateRiskStatus: (id: string, status: RiskItem['status']) => void;
 
-  // Helper Calculations (Derived reactive state)
+  updateCivilChecklist: (itemId: string, completed: boolean) => void;
+  updateWebsiteSettings: (data: Partial<AppStoreState['websiteSettings']>) => void;
+
+  // Dynamic Math & Report Helpers
   getConfirmedGuestsCount: () => number;
-  getTotalBudgetSpent: () => number;
-  getCostPerGuest: () => number;
+  getCostPerGuestMetrics: () => {
+    plannedCostPerGuest: number;
+    contractedCostPerGuest: number;
+    paidCostPerGuest: number;
+  };
   getBuffetEstimates: () => {
     buffetMeals: number;
     softDrinksLiters: number;
@@ -138,15 +175,49 @@ export interface ApplicationState {
   };
 }
 
-export const useAppStore = create<ApplicationState>()(
+export const useAppStore = create<AppStoreState>()(
   persist(
     (set, get) => ({
+      // Auth Initial State
+      currentUser: null,
+      isAuthenticated: false,
+
+      // Initial Workspaces & Memberships
       activeWorkspaceId: DEMO_WORKSPACE_ID,
-      activeRole: 'casal_admin',
       workspaces: [
-        { id: DEMO_WORKSPACE_ID, name: 'Casamento Matheus & Virginia', slug: 'matheus-virginia' },
+        {
+          id: DEMO_WORKSPACE_ID,
+          name: 'Casamento Matheus & Virginia (Demonstração)',
+          slug: 'matheus-virginia-demo',
+          isDemoWorkspace: true,
+          ownerId: 'demo-user-owner',
+          createdAt: '2026-01-01',
+          updatedAt: '2026-07-26',
+        },
+      ],
+      memberships: [
+        {
+          id: 'mem-demo-1',
+          workspaceId: DEMO_WORKSPACE_ID,
+          userId: 'demo-user-owner',
+          userName: 'Matheus Sousa',
+          userEmail: 'matheus@exemplo.com',
+          role: 'casal_admin',
+          permissions: {
+            canEditBudget: true,
+            canEditGuests: true,
+            canEditVisualIdentity: true,
+            canEditTasks: true,
+            canEditVendors: true,
+            canEditContracts: true,
+            canManageTeam: true,
+          },
+          invitedAt: '2026-01-01',
+          status: 'ativo',
+        },
       ],
 
+      // Demo Data Collections
       coupleProfile: demoCoupleProfile,
       palette: demoPalette,
       venues: demoVenues,
@@ -174,23 +245,15 @@ export const useAppStore = create<ApplicationState>()(
           title: 'Arranjos Altos com Orquídeas e Eucalipto',
           votesCount: 5,
         },
-        {
-          id: 'mb2',
-          workspaceId: DEMO_WORKSPACE_ID,
-          category: 'convite',
-          imageUrl: 'https://images.unsplash.com/photo-1510074377623-8cf13fb86c08?auto=format&fit=crop&w=600&q=80',
-          title: 'Convite em Papel Algodão com Lacre de Cera Marsala',
-          votesCount: 4,
-        },
       ],
       decorItems: [
         {
           id: 'dec1',
           workspaceId: DEMO_WORKSPACE_ID,
           section: 'altar',
-          title: 'Arco Botânico Desconstruído com Proteas e Rosas Marsala',
+          title: 'Arco Botânico Desconstruído na Paleta Marsala',
           referenceColor: '#8B263E',
-          floralsOrMaterials: 'Rosas, Eucaliptos, Proteas e Orquídeas Phalaenopsis',
+          floralsOrMaterials: 'Rosas, Eucaliptos e Orquídeas',
           quantity: 1,
           rentalOrPurchase: 'aluguel',
           cost: 4500,
@@ -201,128 +264,262 @@ export const useAppStore = create<ApplicationState>()(
           id: 'mi1',
           workspaceId: DEMO_WORKSPACE_ID,
           course: 'prato_principal',
-          title: 'Medalhão de Mignon ao Molho Roti com Risoto de Grana Padano',
-          description: 'Acompanha crispi de alho-poró e aspargos grelhados',
+          title: 'Medalhão de Mignon ao Molho Roti com Risoto',
+          description: 'Opção principal degustada e aprovada',
           isVegetarian: false,
           isVegan: false,
           isGlutenFree: true,
           isNutFree: true,
           tastingApproved: true,
         },
+      ],
+      risks: [
         {
-          id: 'mi2',
+          id: 'rk1',
           workspaceId: DEMO_WORKSPACE_ID,
-          course: 'prato_principal',
-          title: 'Ravioli de Abóbora Cabotiá com Manteiga de Sálvia e Nozes Caramelizadas',
-          description: 'Opção vegetariana e sem lactose mediante solicitação',
-          isVegetarian: true,
-          isVegan: false,
-          isGlutenFree: false,
-          isNutFree: false,
-          tastingApproved: true,
+          description: 'Chuva forte no horário da cerimônia ao ar livre',
+          category: 'clima',
+          probability: 'media',
+          impact: 'alto',
+          ownerName: 'Cerimonialista Juliana',
+          triggerEvent: 'Previsão do tempo superior a 60% de chuva',
+          preventivePlan: 'Instalação da cobertura envidraçada na pergola 24h antes',
+          responsePlan: 'Mudar a cerimônia para a área coberta às 13:30h',
+          status: 'mitigado',
         },
       ],
+      civilInfo: {
+        workspaceId: DEMO_WORKSPACE_ID,
+        cartorioName: 'Cartório de Registro Civil de Campos do Jordão',
+        cartorioCity: 'Campos do Jordão',
+        cartorioState: 'SP',
+        regimeDeBens: 'comunhao_parcial',
+        hasPactoAntenupcial: false,
+        processStatus: 'habilitado',
+        expirationDate: '2026-12-10',
+        checklists: [
+          { id: 'c1', title: 'Certidões de nascimento atualizadas (90 dias)', completed: true },
+          { id: 'c2', title: 'Comprovantes de residência dos noivos', completed: true },
+          { id: 'c3', title: 'RG e CPF das 2 testemunhas', completed: true },
+        ],
+      },
 
-      // Actions
+      websiteSettings: {
+        title: 'Casamento Matheus & Virginia',
+        storyText: 'Nos conhecemos em uma tarde fria e decidimos compartilhar a vida juntos.',
+        dressCodeNotes: 'Traje Passeio Completo / Semi-Formal',
+        lodgingNotes: 'Indicação de hotéis parceiros em Campos do Jordão',
+        isPublished: true,
+        customSlug: 'matheus-virginia-2026',
+      },
+
+      // Auth Implementation
+      login: (email, pass) => {
+        const users = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('nosso_users') || '[]') : [];
+        const user = users.find((u: User) => u.email.toLowerCase() === email.toLowerCase());
+        
+        if (!user && email !== 'demo@nossograndedia.app') {
+          return { success: false, error: 'Usuário não encontrado. Crie uma conta para acessar.' };
+        }
+
+        const validUser: User = user || {
+          id: 'user-auth-real',
+          name: email.split('@')[0] || 'Usuário',
+          email,
+          emailVerified: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        set({
+          currentUser: validUser,
+          isAuthenticated: true,
+        });
+        return { success: true };
+      },
+
+      signup: (name, email, pass) => {
+        const newUser: User = {
+          id: `user-${Date.now()}`,
+          name,
+          email,
+          emailVerified: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        set({
+          currentUser: newUser,
+          isAuthenticated: true,
+        });
+
+        // Automatically create clean workspace for real user
+        get().createNewRealWorkspace(`Casamento de ${name}`, name.split(' ')[0] || 'Noivo(a) 1', 'Noivo(a) 2');
+        return { success: true };
+      },
+
+      logout: () => set({ currentUser: null, isAuthenticated: false }),
+      verifyEmail: () => set((state) => ({
+        currentUser: state.currentUser ? { ...state.currentUser, emailVerified: true } : null
+      })),
+      updatePassword: () => {},
+      deleteAccount: () => set({ currentUser: null, isAuthenticated: false }),
+
+      enterDemoMode: () => {
+        set({
+          activeWorkspaceId: DEMO_WORKSPACE_ID,
+          coupleProfile: demoCoupleProfile,
+          palette: demoPalette,
+          venues: demoVenues,
+          outfits: demoOutfits,
+          households: demoHouseholds,
+          guests: demoGuests,
+          tables: demoTables,
+          tasks: demoTasks,
+          vendors: demoVendors,
+          budgetItems: demoBudgetItems,
+          payments: demoPayments,
+          timeline: demoTimeline,
+          documents: demoDocuments,
+          gifts: demoGifts,
+          photoShots: demoPhotoShots,
+          notifications: demoNotifications,
+          activityLogs: demoActivityLog,
+        });
+      },
+
+      // Workspace & Membership Management
       setActiveWorkspace: (workspaceId) => set({ activeWorkspaceId: workspaceId }),
-      setActiveRole: (role) => set({ activeRole: role }),
 
-      createNewWorkspace: (name, coupleNames) => {
-        const newId = `ws-${Date.now()}`;
-        const newWorkspace = { id: newId, name, slug: name.toLowerCase().replace(/\s+/g, '-') };
+      createNewRealWorkspace: (weddingName, partner1, partner2) => {
+        const newWsId = `ws-real-${Date.now()}`;
+        const userId = get().currentUser?.id || 'owner';
+
+        const newWorkspace: WeddingWorkspace = {
+          id: newWsId,
+          name: weddingName,
+          slug: weddingName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          isDemoWorkspace: false,
+          ownerId: userId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        const newMembership: Membership = {
+          id: `mem-${Date.now()}`,
+          workspaceId: newWsId,
+          userId,
+          userName: get().currentUser?.name || partner1,
+          userEmail: get().currentUser?.email || '',
+          role: 'casal_admin',
+          permissions: {
+            canEditBudget: true,
+            canEditGuests: true,
+            canEditVisualIdentity: true,
+            canEditTasks: true,
+            canEditVendors: true,
+            canEditContracts: true,
+            canManageTeam: true,
+          },
+          invitedAt: new Date().toISOString(),
+          status: 'ativo',
+        };
+
+        // Create COMPLETELY EMPTY collections for real user!
+        const emptyCoupleProfile: CoupleProfile = {
+          workspaceId: newWsId,
+          partner1Name: partner1,
+          partner2Name: partner2,
+          weddingDate: '2026-11-14',
+          weddingTime: '16:00',
+          timezone: 'America/Sao_Paulo',
+          city: '',
+          state: '',
+          weddingType: 'civil_e_religioso',
+          estimatedGuestsCount: 100,
+          totalBudgetPlanned: 80000,
+          financialResponsibles: ['Casal'],
+          style: 'Elegante e Moderno',
+          formalityLevel: 'Semi-Formal',
+          priorities: ['Gastronomia', 'Música'],
+          availableWeeklyHours: 6,
+          customSlug: weddingName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          status: 'onboarding',
+        };
+
         set((state) => ({
           workspaces: [...state.workspaces, newWorkspace],
-          activeWorkspaceId: newId,
-          coupleProfile: {
-            ...demoCoupleProfile,
-            workspaceId: newId,
-            partner1Name: coupleNames.split('&')[0]?.trim() || 'Noivo(a) 1',
-            partner2Name: coupleNames.split('&')[1]?.trim() || 'Noivo(a) 2',
-          },
+          memberships: [...state.memberships, newMembership],
+          activeWorkspaceId: newWsId,
+          coupleProfile: emptyCoupleProfile,
           guests: [],
           tasks: [],
           vendors: [],
           budgetItems: [],
           payments: [],
+          outfits: [],
+          venues: [],
+          documents: [],
+          timeline: [],
+          decorItems: [],
+          risks: [],
         }));
       },
 
-      resetToDemoData: () => set({
-        activeWorkspaceId: DEMO_WORKSPACE_ID,
-        coupleProfile: demoCoupleProfile,
-        palette: demoPalette,
-        venues: demoVenues,
-        outfits: demoOutfits,
-        households: demoHouseholds,
-        guests: demoGuests,
-        tables: demoTables,
-        tasks: demoTasks,
-        vendors: demoVendors,
-        budgetItems: demoBudgetItems,
-        payments: demoPayments,
-        timeline: demoTimeline,
-        documents: demoDocuments,
-        gifts: demoGifts,
-        photoShots: demoPhotoShots,
-        notifications: demoNotifications,
-        activityLogs: demoActivityLog,
-      }),
+      deleteCurrentWorkspace: () => {
+        const activeId = get().activeWorkspaceId;
+        set((state) => ({
+          workspaces: state.workspaces.filter((w) => w.id !== activeId),
+          activeWorkspaceId: DEMO_WORKSPACE_ID,
+        }));
+      },
 
-      completeOnboarding: (data) => {
+      inviteTeamMember: (email, role) => {
+        const activeId = get().activeWorkspaceId;
+        const newMembership: Membership = {
+          id: `mem-${Date.now()}`,
+          workspaceId: activeId,
+          userId: `user-invited-${Date.now()}`,
+          userName: email.split('@')[0],
+          userEmail: email,
+          role,
+          permissions: {
+            canEditBudget: role === 'casal_admin' || role === 'cerimonialista',
+            canEditGuests: role === 'casal_admin' || role === 'cerimonialista' || role === 'familiar',
+            canEditVisualIdentity: role === 'casal_admin',
+            canEditTasks: role !== 'convidado',
+            canEditVendors: role === 'casal_admin' || role === 'cerimonialista',
+            canEditContracts: role === 'casal_admin',
+            canManageTeam: role === 'casal_admin',
+          },
+          invitedAt: new Date().toISOString(),
+          status: 'pendente',
+        };
+        set((state) => ({ memberships: [...state.memberships, newMembership] }));
+      },
+
+      completeRealOnboarding: (data) => {
         set((state) => {
           const updatedProfile = { ...state.coupleProfile, ...data, status: 'active' as const };
-          
-          // Auto-generate Checklist Tasks based on monthsBeforeWedding
-          const autoTasks: Task[] = [
-            {
-              id: `task-auto-1`,
-              workspaceId: state.activeWorkspaceId,
-              title: 'Definir estilo do casamento e contratar Assessoria/Cerimonial',
-              category: 'Planejamento Inicial',
-              assignedToUserIds: ['user-1'],
-              dueDate: '2026-08-15',
-              priority: 'urgente',
-              status: 'nao_iniciada',
-              subtasks: [{ id: 'st1', title: 'Entrevistar 3 cerimonialistas recomendados', completed: false }],
-              attachmentsCount: 0,
-              commentsCount: 0,
-              monthsBeforeWedding: 12,
-            },
-            {
-              id: `task-auto-2`,
-              workspaceId: state.activeWorkspaceId,
-              title: 'Visitar espaços e degustar cardápios de Buffet',
-              category: 'Local & Gastronomia',
-              assignedToUserIds: ['user-1'],
-              dueDate: '2026-09-01',
-              priority: 'alta',
-              status: 'nao_iniciada',
-              subtasks: [{ id: 'st2', title: 'Conferir alvarás e plano de chuva', completed: false }],
-              attachmentsCount: 0,
-              commentsCount: 0,
-              monthsBeforeWedding: 12,
-            },
-          ];
-
-          return {
-            coupleProfile: updatedProfile,
-            tasks: [...state.tasks, ...autoTasks],
-            activityLogs: [
-              {
-                id: `act-${Date.now()}`,
-                workspaceId: state.activeWorkspaceId,
-                userId: 'system',
-                userName: 'Sistema Nosso Grande Dia',
-                action: 'Onboarding Concluído',
-                details: 'Perfil do casal configurado e checklist gerado automaticamente.',
-                timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
-              },
-              ...state.activityLogs,
-            ],
-          };
+          return { coupleProfile: updatedProfile };
         });
       },
 
+      // Role & Permission Checks
+      getCurrentRole: () => {
+        const { memberships, activeWorkspaceId, currentUser } = get();
+        const activeMembership = memberships.find(
+          (m) => m.workspaceId === activeWorkspaceId && m.userId === currentUser?.id
+        );
+        return activeMembership?.role || 'casal_admin';
+      },
+
+      isCurrentUserAdmin: () => {
+        const role = get().getCurrentRole();
+        return role === 'casal_admin' || role === 'admin_geral';
+      },
+
+      // Module CRUD Actions
       updateCoupleProfile: (data) =>
         set((state) => ({ coupleProfile: { ...state.coupleProfile, ...data } })),
 
@@ -349,97 +546,102 @@ export const useAppStore = create<ApplicationState>()(
         set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) })),
 
       addGuest: (guestData) =>
-        set((state) => {
-          const newGuest: Guest = {
-            ...guestData,
-            id: `g-${Date.now()}`,
-            workspaceId: state.activeWorkspaceId,
-            qrCodeToken: `QR-${guestData.fullName.toUpperCase().replace(/\s+/g, '-')}-${Date.now().toString().slice(-4)}`,
-            checkedIn: false,
-          };
-          return { guests: [...state.guests, newGuest] };
-        }),
+        set((state) => ({
+          guests: [
+            ...state.guests,
+            {
+              ...guestData,
+              id: `g-${Date.now()}`,
+              workspaceId: state.activeWorkspaceId,
+              qrCodeToken: `QR-${Date.now().toString().slice(-6)}`,
+              checkedIn: false,
+            },
+          ],
+        })),
+
+      updateGuest: (id, data) =>
+        set((state) => ({
+          guests: state.guests.map((g) => (g.id === id ? { ...g, ...data } : g)),
+        })),
 
       updateGuestRSVP: (guestId, status, notes) =>
-        set((state) => {
-          const updatedGuests = state.guests.map((g) =>
-            g.id === guestId ? { ...g, status, notes: notes || g.notes } : g
-          );
-
-          // Trigger cross-module sync log
-          const guestName = state.guests.find((g) => g.id === guestId)?.fullName;
-
-          return {
-            guests: updatedGuests,
-            activityLogs: [
-              {
-                id: `act-${Date.now()}`,
-                workspaceId: state.activeWorkspaceId,
-                userId: 'user-rsvp',
-                userName: guestName || 'Convidado',
-                action: 'Atualização de RSVP',
-                details: `Status alterado para: ${status.toUpperCase()}`,
-                timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
-              },
-              ...state.activityLogs,
-            ],
-          };
-        }),
-
-      toggleGuestCheckIn: (guestId) =>
         set((state) => ({
           guests: state.guests.map((g) =>
-            g.id === guestId ? { ...g, checkedIn: !g.checkedIn } : g
+            g.id === guestId ? { ...g, status, notes: notes || g.notes } : g
           ),
         })),
 
-      importGuestsFromCSV: (guestList) =>
-        set((state) => {
-          const newGuests: Guest[] = guestList.map((g, idx) => ({
-            id: `g-import-${Date.now()}-${idx}`,
-            workspaceId: state.activeWorkspaceId,
-            fullName: g.fullName || 'Convidado Sem Nome',
-            relationship: g.relationship || 'amigos',
-            category: g.category || 'convidado_geral',
-            ageType: g.ageType || 'adulto',
-            invitationType: g.invitationType || 'individual',
-            allowedPlusOnes: g.allowedPlusOnes || 0,
-            status: g.status || 'pendente',
-            eventsPermitted: ['ev1', 'ev2'],
-            qrCodeToken: `QR-IMPORT-${idx}-${Date.now().toString().slice(-4)}`,
-            checkedIn: false,
-            email: g.email,
-            phone: g.phone,
-          }));
-          return { guests: [...state.guests, ...newGuests] };
-        }),
+      toggleGuestCheckIn: (guestId) =>
+        set((state) => ({
+          guests: state.guests.map((g) => (g.id === guestId ? { ...g, checkedIn: !g.checkedIn } : g)),
+        })),
+
+      importGuestsCSV: (importedList) => {
+        const existing = get().guests;
+        let addedCount = 0;
+        let dupCount = 0;
+        const newItems: Guest[] = [];
+
+        importedList.forEach((item, idx) => {
+          const isDuplicate = existing.some(
+            (e) => e.fullName.toLowerCase() === item.fullName?.toLowerCase()
+          );
+          if (isDuplicate) {
+            dupCount++;
+          } else {
+            addedCount++;
+            newItems.push({
+              id: `g-csv-${Date.now()}-${idx}`,
+              workspaceId: get().activeWorkspaceId,
+              fullName: item.fullName || 'Convidado Sem Nome',
+              relationship: item.relationship || 'amigos',
+              category: item.category || 'convidado_geral',
+              ageType: item.ageType || 'adulto',
+              invitationType: 'individual',
+              allowedPlusOnes: item.allowedPlusOnes || 0,
+              status: item.status || 'pendente',
+              eventsPermitted: ['ev1'],
+              qrCodeToken: `QR-CSV-${Date.now().toString().slice(-4)}-${idx}`,
+              checkedIn: false,
+              phone: item.phone,
+              email: item.email,
+            });
+          }
+        });
+
+        set((state) => ({ guests: [...state.guests, ...newItems] }));
+        return { added: addedCount, duplicates: dupCount };
+      },
 
       deleteGuest: (id) =>
         set((state) => ({ guests: state.guests.filter((g) => g.id !== id) })),
 
       addBudgetItem: (itemData) =>
-        set((state) => {
-          const newItem: BudgetItem = {
-            ...itemData,
-            id: `bi-${Date.now()}`,
-            workspaceId: state.activeWorkspaceId,
-            paidAmount: 0,
-            costPerGuest: itemData.contractedCost
-              ? itemData.contractedCost / (state.coupleProfile.estimatedGuestsCount || 1)
-              : 0,
-          };
-          return { budgetItems: [...state.budgetItems, newItem] };
-        }),
+        set((state) => ({
+          budgetItems: [
+            ...state.budgetItems,
+            {
+              ...itemData,
+              id: `bi-${Date.now()}`,
+              workspaceId: state.activeWorkspaceId,
+              paidAmount: 0,
+            },
+          ],
+        })),
+
+      updateBudgetItem: (id, data) =>
+        set((state) => ({
+          budgetItems: state.budgetItems.map((b) => (b.id === id ? { ...b, ...data } : b)),
+        })),
+
+      deleteBudgetItem: (id) =>
+        set((state) => ({ budgetItems: state.budgetItems.filter((b) => b.id !== id) })),
 
       addPayment: (paymentData) =>
         set((state) => ({
           payments: [
             ...state.payments,
-            {
-              ...paymentData,
-              id: `p-${Date.now()}`,
-              workspaceId: state.activeWorkspaceId,
-            },
+            { ...paymentData, id: `p-${Date.now()}`, workspaceId: state.activeWorkspaceId },
           ],
         })),
 
@@ -454,7 +656,6 @@ export const useAppStore = create<ApplicationState>()(
               : p
           );
 
-          // Recalculate paid amount on corresponding Budget Item
           const updatedBudgetItems = state.budgetItems.map((item) => {
             if (item.id === payment.budgetItemId) {
               return { ...item, paidAmount: item.paidAmount + payment.amount };
@@ -474,25 +675,12 @@ export const useAppStore = create<ApplicationState>()(
         })),
 
       updateVendorStatus: (id, status) =>
-        set((state) => {
-          const updatedVendors = state.vendors.map((v) =>
-            v.id === id ? { ...v, status } : v
-          );
+        set((state) => ({
+          vendors: state.vendors.map((v) => (v.id === id ? { ...v, status } : v)),
+        })),
 
-          // Cross-module trigger: when vendor is contratado, update related budget item or tasks
-          const vendor = state.vendors.find((v) => v.id === id);
-          let updatedTasks = state.tasks;
-
-          if (status === 'contratado' && vendor) {
-            updatedTasks = state.tasks.map((t) =>
-              t.category.toLowerCase().includes(vendor.category.toLowerCase())
-                ? { ...t, status: 'concluida' as const }
-                : t
-            );
-          }
-
-          return { vendors: updatedVendors, tasks: updatedTasks };
-        }),
+      deleteVendor: (id) =>
+        set((state) => ({ vendors: state.vendors.filter((v) => v.id !== id) })),
 
       updatePaletteColor: (colorId, hex, name) =>
         set((state) => ({
@@ -517,11 +705,20 @@ export const useAppStore = create<ApplicationState>()(
           outfits: state.outfits.map((o) => (o.id === id ? { ...o, status } : o)),
         })),
 
+      deleteOutfit: (id) =>
+        set((state) => ({ outfits: state.outfits.filter((o) => o.id !== id) })),
+
       assignGuestToSeat: (guestId, tableId, seatId) =>
         set((state) => ({
-          guests: state.guests.map((g) =>
-            g.id === guestId ? { ...g, tableId, seatId } : g
-          ),
+          guests: state.guests.map((g) => (g.id === guestId ? { ...g, tableId, seatId } : g)),
+        })),
+
+      addVenue: (venueData) =>
+        set((state) => ({
+          venues: [
+            ...state.venues,
+            { ...venueData, id: `vn-${Date.now()}`, workspaceId: state.activeWorkspaceId },
+          ],
         })),
 
       addDocument: (docData) =>
@@ -537,6 +734,9 @@ export const useAppStore = create<ApplicationState>()(
           ],
         })),
 
+      deleteDocument: (id) =>
+        set((state) => ({ documents: state.documents.filter((d) => d.id !== id) })),
+
       addTimelineItem: (itemData) =>
         set((state) => ({
           timeline: [
@@ -545,42 +745,68 @@ export const useAppStore = create<ApplicationState>()(
           ].sort((a, b) => a.time.localeCompare(b.time)),
         })),
 
-      // Derived Calculations
+      addRiskItem: (riskData) =>
+        set((state) => ({
+          risks: [
+            ...state.risks,
+            { ...riskData, id: `rk-${Date.now()}`, workspaceId: state.activeWorkspaceId },
+          ],
+        })),
+
+      updateRiskStatus: (id, status) =>
+        set((state) => ({
+          risks: state.risks.map((r) => (r.id === id ? { ...r, status } : r)),
+        })),
+
+      updateCivilChecklist: (itemId, completed) =>
+        set((state) => ({
+          civilInfo: {
+            ...state.civilInfo,
+            checklists: state.civilInfo.checklists.map((c) =>
+              c.id === itemId ? { ...c, completed } : c
+            ),
+          },
+        })),
+
+      updateWebsiteSettings: (data) =>
+        set((state) => ({ websiteSettings: { ...state.websiteSettings, ...data } })),
+
+      // Derived Math Helpers
       getConfirmedGuestsCount: () => {
         const { guests } = get();
-        return guests.reduce((acc, g) => {
-          if (g.status === 'confirmado') {
-            return acc + 1 + (g.allowedPlusOnes || 0);
-          }
-          return acc;
-        }, 0);
+        return guests.reduce((acc, g) => (g.status === 'confirmado' ? acc + 1 + (g.allowedPlusOnes || 0) : acc), 0);
       },
 
-      getTotalBudgetSpent: () => {
-        const { budgetItems } = get();
-        return budgetItems.reduce((acc, item) => acc + (item.contractedCost || item.estimatedCost || 0), 0);
-      },
+      getCostPerGuestMetrics: () => {
+        const { coupleProfile, budgetItems } = get();
+        const estimated = coupleProfile.estimatedGuestsCount || 1;
+        const confirmed = get().getConfirmedGuestsCount() || estimated;
 
-      getCostPerGuest: () => {
-        const total = get().getTotalBudgetSpent();
-        const confirmed = get().getConfirmedGuestsCount() || get().coupleProfile.estimatedGuestsCount || 1;
-        return Math.round(total / confirmed);
+        const totalPlanned = coupleProfile.totalBudgetPlanned;
+        const totalContracted = budgetItems.reduce((acc, i) => acc + (i.contractedCost || i.estimatedCost || 0), 0);
+        const totalPaid = budgetItems.reduce((acc, i) => acc + i.paidAmount, 0);
+
+        return {
+          plannedCostPerGuest: Math.round(totalPlanned / estimated),
+          contractedCostPerGuest: Math.round(totalContracted / confirmed),
+          paidCostPerGuest: Math.round(totalPaid / confirmed),
+        };
       },
 
       getBuffetEstimates: () => {
-        const confirmed = get().getConfirmedGuestsCount() || get().coupleProfile.estimatedGuestsCount;
+        const confirmed = get().getConfirmedGuestsCount() || get().coupleProfile.estimatedGuestsCount || 100;
         return {
           buffetMeals: confirmed,
-          softDrinksLiters: Math.round(confirmed * 0.8), // 800ml por pessoa
-          sparklingBottles: Math.ceil(confirmed / 3),    // 1 garrafa a cada 3 pessoas
-          sweetsCount: confirmed * 6,                    // 6 doces finos por pessoa
-          favorsCount: Math.ceil(confirmed * 1.1),       // 10% de margem para lembrancinhas
-          invitesCount: Math.ceil(confirmed / 2),        // ~1 convite por casal/família
+          softDrinksLiters: Math.round(confirmed * 0.8),
+          sparklingBottles: Math.ceil(confirmed / 3),
+          sweetsCount: confirmed * 6,
+          favorsCount: Math.ceil(confirmed * 1.1),
+          invitesCount: Math.ceil(confirmed / 2),
         };
       },
     }),
     {
-      name: 'nosso-grande-dia-storage',
+      name: 'nosso_grande_dia_store_v2',
     }
   )
 );

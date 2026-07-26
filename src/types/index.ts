@@ -1,4 +1,4 @@
-// Definições de Tipos e Entidades da Plataforma Nosso Grande Dia (41 Entidades)
+// Definições de Tipos e Entidades da Plataforma Nosso Grande Dia
 
 export type UserRole =
   | 'casal_admin'
@@ -17,43 +17,58 @@ export interface User {
   email: string;
   avatarUrl?: string;
   phone?: string;
+  emailVerified: boolean;
+  twoFactorEnabled?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface WeddingWorkspace {
-  id: string;
-  name: string; // Ex: "Casamento Matheus & Virginia"
-  slug: string;
-  createdAt: string;
-  updatedAt: string;
-  ownerId: string;
+export interface UserSession {
+  user: User | null;
+  isAuthenticated: boolean;
+  activeWorkspaceId: string | null;
+}
+
+export interface WorkspacePermissionFlags {
+  canEditBudget: boolean;
+  canEditGuests: boolean;
+  canEditVisualIdentity: boolean;
+  canEditTasks: boolean;
+  canEditVendors: boolean;
+  canEditContracts: boolean;
+  canManageTeam: boolean;
+  restrictedVendorCategory?: string;
 }
 
 export interface Membership {
   id: string;
   workspaceId: string;
   userId: string;
+  userName: string;
+  userEmail: string;
   role: UserRole;
-  permissions: {
-    canEditBudget: boolean;
-    canEditGuests: boolean;
-    canEditVisualIdentity: boolean;
-    canEditTasks: boolean;
-    canEditVendors: boolean;
-    canEditContracts: boolean;
-    canManageUsers: boolean;
-    restrictedVendorId?: string; // Para perfil de fornecedor
-  };
+  permissions: WorkspacePermissionFlags;
   invitedAt: string;
+  acceptedAt?: string;
+  status: 'ativo' | 'pendente' | 'revogado';
+}
+
+export interface WeddingWorkspace {
+  id: string;
+  name: string;
+  slug: string;
+  isDemoWorkspace?: boolean; // Se é workspace descartável de teste
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CoupleProfile {
   workspaceId: string;
-  partner1Name: string; // Matheus
-  partner2Name: string; // Virginia
+  partner1Name: string;
+  partner2Name: string;
   coverImageUrl?: string;
-  weddingDate: string; // ISO date
+  weddingDate: string; // ISO date string (YYYY-MM-DD) sem fusos inconsistentes
   weddingTime: string; // 16:30
   timezone: string;
   city: string;
@@ -70,20 +85,21 @@ export interface CoupleProfile {
     | 'personalizado';
   estimatedGuestsCount: number;
   totalBudgetPlanned: number;
-  financialResponsibles: string[]; // Ex: ["Casal", "Pais da Noiva"]
-  style: string; // Ex: "Botânico Chic / Elegante"
+  financialResponsibles: string[];
+  style: string;
   formalityLevel: 'Casual' | 'Semi-Formal' | 'Formal' | 'Black Tie';
-  priorities: string[]; // ["Gastronomia", "Fotografia", "Música"]
+  priorities: string[];
   culturalTraditions?: string;
   accessibilityNeeds?: string;
   availableWeeklyHours: number;
+  customSlug: string;
   status: 'onboarding' | 'active' | 'archived';
 }
 
 export interface Event {
   id: string;
   workspaceId: string;
-  title: string; // "Cerimônia Civil", "Recepção", "Ensaio"
+  title: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -111,11 +127,13 @@ export interface Venue {
   generatorPowerKva?: number;
   airConditioning: boolean;
   accessibleRoute: boolean;
-  weatherBackupPlan?: string; // Plano para chuva
+  weatherBackupPlan?: string;
   noiseRestrictions?: string;
   exclusiveVendorsRule?: string;
   overtimeFeePerHour?: number;
   rentalFee: number;
+  setupStartTime?: string;
+  teardownEndTime?: string;
   notes?: string;
 }
 
@@ -136,7 +154,7 @@ export interface Task {
   workspaceId: string;
   title: string;
   description?: string;
-  category: string; // "Gastronomia", "Papelaria", "Trajes"
+  category: string;
   assignedToUserIds: string[];
   startDate?: string;
   dueDate: string;
@@ -148,7 +166,7 @@ export interface Task {
   subtasks: { id: string; title: string; completed: boolean }[];
   attachmentsCount: number;
   commentsCount: number;
-  monthsBeforeWedding: number; // 24, 18, 12, 9, 6, 3, 1
+  monthsBeforeWedding: number;
 }
 
 export interface TaskDependency {
@@ -160,7 +178,7 @@ export interface TaskDependency {
 export interface Household {
   id: string;
   workspaceId: string;
-  familyName: string; // Ex: "Família Silva"
+  familyName: string;
   address?: string;
   city?: string;
   notes?: string;
@@ -179,15 +197,17 @@ export interface Guest {
   address?: string;
   ageType: 'adulto' | 'crianca' | 'bebe';
   invitationType: 'individual' | 'familiar';
-  allowedPlusOnes: number; // Acompanhantes extras autorizados
+  allowedPlusOnes: number;
   plusOneNames?: string[];
   status: 'pendente' | 'confirmado' | 'recusado';
-  eventsPermitted: string[]; // IDs dos eventos autorizados
+  eventsPermitted: string[];
   tableId?: string;
   seatId?: string;
   qrCodeToken: string;
   checkedIn: boolean;
   notes?: string;
+  dietaryNotes?: string;
+  accessibilityNotes?: string;
 }
 
 export interface Invitation {
@@ -214,24 +234,10 @@ export interface RSVP {
   updatedAt: string;
 }
 
-export interface DietaryRequirement {
-  id: string;
-  guestId: string;
-  type: 'vegetariano' | 'vegano' | 'sem_gluten' | 'sem_lactose' | 'alergia_amendoim' | 'alergia_frutos_mar' | 'outros';
-  notes?: string;
-}
-
-export interface AccessibilityRequirement {
-  id: string;
-  guestId: string;
-  type: 'cadeirante' | 'mobilidade_reduzida' | 'deficiencia_visual' | 'deficiencia_auditiva' | 'idoso' | 'outro';
-  details?: string;
-}
-
 export interface Table {
   id: string;
   workspaceId: string;
-  name: string; // Ex: "Mesa 01 - Família da Noiva"
+  name: string;
   shape: 'redonda' | 'quadrada' | 'retangular' | 'imperial';
   capacity: number;
   posX: number;
@@ -259,19 +265,13 @@ export type VendorStatus =
   | 'concluido'
   | 'descartado';
 
-export interface VendorCategory {
-  id: string;
-  name: string; // "Cerimonial", "Buffet", "Fotografia"
-  suggestedPercentOfBudget: number; // Ex: 15% para Buffet
-}
-
 export interface Vendor {
   id: string;
   workspaceId: string;
   category: string;
-  legalName: string; // Razão Social
-  tradeName: string; // Nome Fantasia
-  documentNumber?: string; // CPF ou CNPJ
+  legalName: string;
+  tradeName: string;
+  documentNumber?: string;
   contactPerson: string;
   phone: string;
   email: string;
@@ -280,7 +280,7 @@ export interface Vendor {
   website?: string;
   portfolioUrl?: string;
   status: VendorStatus;
-  rating?: number; // 1 a 5
+  rating?: number;
   pros?: string;
   cons?: string;
   notes?: string;
@@ -343,16 +343,8 @@ export interface BudgetItem {
   negotiatedCost: number;
   contractedCost: number;
   paidAmount: number;
-  costPerGuest: number;
-  payerName: string; // "Casal", "Noivo", "Noiva", "Pais Noiva", "Pais Noivo"
+  payerName: string;
   notes?: string;
-}
-
-export interface Payer {
-  id: string;
-  workspaceId: string;
-  name: string;
-  percentageContribution?: number;
 }
 
 export interface Payment {
@@ -395,7 +387,7 @@ export interface Document {
 export interface Outfit {
   id: string;
   workspaceId: string;
-  participantName: string; // "Virginia", "Matheus", "Ana (Madrinha)"
+  participantName: string;
   role: 'noiva' | 'noivo' | 'madrinha' | 'padrinho' | 'pai' | 'mae' | 'dama' | 'pajem' | 'celebrante';
   color: string;
   itemDescription: string;
@@ -409,35 +401,23 @@ export interface Outfit {
   accessoriesNotes?: string;
 }
 
-export interface OutfitAppointment {
-  id: string;
-  workspaceId: string;
-  outfitId?: string;
-  type: 'prova_vestido' | 'ajuste_terno' | 'teste_cabelo_make' | 'manicure' | 'estetica' | 'dia_da_noiva' | 'dia_do_noivo';
-  appointmentDate: string;
-  appointmentTime: string;
-  location: string;
-  notes?: string;
-  status: 'agendado' | 'concluido' | 'cancelado';
-}
-
 export interface PaletteColor {
   id: string;
-  name: string; // "Marsala Profundo"
-  hex: string;  // "#8B263E"
-  rgb: string;  // "139, 38, 62"
+  name: string;
+  hex: string;
+  rgb: string;
   role: 'principal' | 'secundaria' | 'acento' | 'neutra' | 'proibida';
-  appliedTo: string[]; // ["Trajes Madrinhas", "Flores Altar", "Convites"]
+  appliedTo: string[];
 }
 
 export interface Palette {
   workspaceId: string;
   colors: PaletteColor[];
-  primaryTypography: string; // "Playfair Display"
-  secondaryTypography: string; // "Plus Jakarta Sans"
-  photoStyleDescription?: string; // "Luz natural, tons quentes e cinematográficos"
-  texturesAndMaterials?: string[]; // ["Linho puro", "Madeira de demolição", "Dourado fosco"]
-  visualVoiceTone?: string; // "Acolhedor, elegante, poético e inclusivo"
+  primaryTypography: string;
+  secondaryTypography: string;
+  photoStyleDescription?: string;
+  texturesAndMaterials?: string[];
+  visualVoiceTone?: string;
 }
 
 export interface MoodboardItem {
@@ -480,9 +460,9 @@ export interface MenuItem {
 export interface TimelineItem {
   id: string;
   workspaceId: string;
-  time: string; // "16:30"
+  time: string;
   durationMinutes: number;
-  title: string; // "Entrada dos Padrinhos"
+  title: string;
   location: string;
   responsiblePerson: string;
   vendorId?: string;
@@ -492,27 +472,10 @@ export interface TimelineItem {
   visibleToProfiles: UserRole[];
 }
 
-export interface MessageTemplate {
-  id: string;
-  workspaceId: string;
-  type: 'save_the_date' | 'convite_oficial' | 'lembrete_rsvp' | 'mudanca_data' | 'agradecimento' | 'emergencia';
-  title: string;
-  body: string;
-}
-
-export interface MessageDelivery {
-  id: string;
-  templateId: string;
-  guestId: string;
-  sentAt: string;
-  channel: 'whatsapp' | 'email';
-  status: 'enviado' | 'entregue' | 'falha';
-}
-
 export interface Gift {
   id: string;
   workspaceId: string;
-  title: string; // "Cota Lua de Mel - Jantar Romântico em Paris"
+  title: string;
   category: 'cota' | 'produto' | 'experiencia' | 'doacao';
   price: number;
   imageUrl?: string;
@@ -528,7 +491,7 @@ export interface PhotoShot {
   id: string;
   workspaceId: string;
   moment: 'pre_cerimonia' | 'cerimonia' | 'protocolo_familia' | 'recepcao' | 'festa';
-  title: string; // "Foto com Padrinhos na Pista"
+  title: string;
   peopleInvolved: string;
   priority: 'alta' | 'media' | 'opcional';
   taken: boolean;
@@ -544,17 +507,6 @@ export interface Notification {
   createdAt: string;
 }
 
-export interface Comment {
-  id: string;
-  workspaceId: string;
-  targetType: 'task' | 'vendor' | 'budget_item' | 'outfit';
-  targetId: string;
-  userId: string;
-  userName: string;
-  text: string;
-  createdAt: string;
-}
-
 export interface ActivityLog {
   id: string;
   workspaceId: string;
@@ -563,4 +515,42 @@ export interface ActivityLog {
   action: string;
   details: string;
   timestamp: string;
+}
+
+export interface RiskItem {
+  id: string;
+  workspaceId: string;
+  description: string;
+  category: 'clima' | 'energia' | 'fornecedor' | 'saude' | 'transporte' | 'seguranca';
+  probability: 'baixa' | 'media' | 'alta';
+  impact: 'baixo' | 'medio' | 'alto';
+  ownerName: string;
+  triggerEvent: string;
+  preventivePlan: string;
+  responsePlan: string;
+  status: 'mitigado' | 'monitorando' | 'critico';
+}
+
+export interface CivilChecklistItem {
+  id: string;
+  title: string;
+  completed: boolean;
+  notes?: string;
+  dueDate?: string;
+}
+
+export interface CivilWeddingInfo {
+  workspaceId: string;
+  cartorioName: string;
+  cartorioCity: string;
+  cartorioState: string;
+  regimeDeBens: 'comunhao_parcial' | 'comunhao_total' | 'separacao_total' | 'participacao_final';
+  hasPactoAntenupcial: boolean;
+  processStatus: 'documentos_pendentes' | 'em_analise_cartorio' | 'edital_publicado' | 'habilitado';
+  expirationDate?: string;
+  witness1Name?: string;
+  witness1Document?: string;
+  witness2Name?: string;
+  witness2Document?: string;
+  checklists: CivilChecklistItem[];
 }

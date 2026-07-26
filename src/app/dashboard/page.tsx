@@ -11,40 +11,41 @@ import {
   DollarSign,
   Briefcase,
   AlertTriangle,
-  ArrowUpRight,
-  Sparkles,
-  Calendar,
   Clock,
   ChevronRight,
-  CheckCircle2,
   TrendingUp,
   Wine,
-  Gift
+  Shield,
+  Compass
 } from 'lucide-react';
 
 export default function DashboardPage() {
   const {
     coupleProfile,
-    activeRole,
     tasks,
     guests,
     vendors,
     budgetItems,
     payments,
-    notifications,
     activityLogs,
+    workspaces,
+    activeWorkspaceId,
     getConfirmedGuestsCount,
-    getTotalBudgetSpent,
-    getCostPerGuest,
-    getBuffetEstimates
+    getCostPerGuestMetrics,
+    getBuffetEstimates,
+    getCurrentRole
   } = useAppStore();
 
-  const { days, hours, isPast } = getDaysCountdown(coupleProfile.weddingDate);
+  const currentRole = getCurrentRole();
+  const activeWs = workspaces.find((w) => w.id === activeWorkspaceId);
+  const isDemo = activeWs?.isDemoWorkspace;
+
+  const { days, isPast } = getDaysCountdown(coupleProfile.weddingDate);
   const confirmedGuests = getConfirmedGuestsCount();
-  const totalBudgetSpent = getTotalBudgetSpent();
-  const costPerGuest = getCostPerGuest();
+  const { plannedCostPerGuest, contractedCostPerGuest } = getCostPerGuestMetrics();
   const buffetEstimates = getBuffetEstimates();
 
+  const totalBudgetSpent = budgetItems.reduce((acc, item) => acc + (item.contractedCost || item.estimatedCost || 0), 0);
   const totalPaid = budgetItems.reduce((acc, item) => acc + item.paidAmount, 0);
   const totalPending = totalBudgetSpent - totalPaid;
   const remainingBudget = coupleProfile.totalBudgetPlanned - totalBudgetSpent;
@@ -52,63 +53,74 @@ export default function DashboardPage() {
   const urgentTasks = tasks.filter((t) => t.status !== 'concluida' && t.priority === 'urgente');
   const upcomingPayments = payments.filter((p) => p.status === 'pendente');
 
-  // Role Restriction Message if Vendor or Guest
-  if (activeRole === 'fornecedor') {
+  // Role Restriction Message if Vendor
+  if (currentRole === 'fornecedor') {
     return (
-      <div className="bg-surface p-8 rounded-2xl border border-border text-center shadow-card max-w-xl mx-auto my-12">
-        <Briefcase className="w-12 h-12 text-marsala-500 mx-auto mb-3" />
-        <h2 className="font-serif text-2xl font-bold text-charcoal">Portal do Fornecedor Contratado</h2>
-        <p className="text-sm text-slate-600 mt-2">
-          Você está acessando o ambiente seguro de fornecedor. Aqui você tem acesso exclusivo ao seu contrato, cronograma dos entregáveis e parcelas de pagamento.
+      <div className="bg-surface p-8 rounded-3xl border border-border text-center shadow-card max-w-xl mx-auto my-12 space-y-4">
+        <Briefcase className="w-10 h-10 text-marsala-500 mx-auto" />
+        <h2 className="font-serif text-xl font-bold text-charcoal">Portal do Fornecedor Contratado</h2>
+        <p className="text-xs text-slate-600">
+          Você possui acesso restrito ao contrato, cronograma de entregáveis e parcelas de pagamento do seu serviço.
         </p>
-        <div className="mt-6 p-4 bg-surface-muted rounded-xl text-left border border-border">
-          <p className="text-xs font-semibold text-charcoal">Empresa: Quinta das Flores Gastronomia</p>
-          <p className="text-xs text-slate-500 mt-1">Status: Contrato Assinado (R$ 57.600,00)</p>
-          <p className="text-xs text-emerald-600 font-semibold mt-1">Próxima Parcela: R$ 19.200,00 em 30/10/2026</p>
-        </div>
       </div>
     );
   }
 
-  if (activeRole === 'convidado') {
+  // Role Restriction Message if Guest
+  if (currentRole === 'convidado') {
     return (
-      <div className="bg-surface p-8 rounded-2xl border border-border text-center shadow-card max-w-xl mx-auto my-12">
-        <Heart className="w-12 h-12 text-marsala-500 mx-auto mb-3 animate-pulse" />
-        <h2 className="font-serif text-2xl font-bold text-charcoal">Área Secreta dos Convidados</h2>
-        <p className="text-sm text-slate-600 mt-2">
-          Bem-vindo ao espaço especial de {coupleProfile.partner1Name} & {coupleProfile.partner2Name}. Confirme sua presença (RSVP) e acompanhe a programação oficial.
+      <div className="bg-surface p-8 rounded-3xl border border-border text-center shadow-card max-w-xl mx-auto my-12 space-y-4">
+        <Heart className="w-10 h-10 text-marsala-500 mx-auto" />
+        <h2 className="font-serif text-xl font-bold text-charcoal">Área do Convidado</h2>
+        <p className="text-xs text-slate-600">
+          Bem-vindo ao espaço de {coupleProfile.partner1Name} & {coupleProfile.partner2Name}. Confirme sua presença no RSVP online.
         </p>
-        <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/site"
-            className="px-6 py-3 bg-marsala-500 text-white font-semibold text-xs rounded-xl shadow-card hover:bg-marsala-600 transition-colors"
-          >
-            Acessar Site do Casal & RSVP
-          </Link>
-        </div>
+        <Link
+          href={`/site`}
+          className="inline-block px-6 py-2.5 bg-marsala-500 text-white font-bold text-xs rounded-xl shadow-card hover:bg-marsala-600"
+        >
+          Acessar Site do Casal & RSVP
+        </Link>
       </div>
     );
   }
+
+  // Empty State for New Workspace
+  const isEmptyWorkspace = guests.length === 0 && tasks.length === 0 && budgetItems.length === 0 && !isDemo;
 
   return (
     <div className="space-y-8">
+      {/* Demo Workspace Banner */}
+      {isDemo && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-amber-700 shrink-0" />
+            <span>
+              <strong>Modo de Demonstração (Matheus & Virginia):</strong> Este é um workspace descartável de teste com dados simulados.
+            </span>
+          </div>
+          <Link href="/onboarding" className="font-bold text-amber-800 hover:underline shrink-0">
+            Criar Meu Casamento Real
+          </Link>
+        </div>
+      )}
+
       {/* Hero Header Banner */}
       <div className="relative overflow-hidden rounded-3xl marsala-gradient text-white p-6 sm:p-8 shadow-card">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-md mb-3 border border-white/20">
-              <Sparkles className="w-3.5 h-3.5 text-champagne-400" />
-              Casamento Botânico Chic & Sofisticado
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-md mb-3 border border-white/20">
+              {coupleProfile.style || 'Estilo do Casamento'}
             </span>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
               {coupleProfile.partner1Name} & {coupleProfile.partner2Name}
             </h1>
             <p className="text-xs sm:text-sm text-rose-100 mt-2 max-w-xl">
-              Toda a jornada do seu grande dia centralizada, sem planilhas espalhadas e com sincronização automática entre todos os módulos.
+              Plataforma de gestão integrada de casamentos com sincronização em tempo real entre convidados, orçamento e cronograma.
             </p>
           </div>
 
-          {/* Large Countdown Widget */}
+          {/* Countdown Widget */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/20 text-center min-w-[200px] shrink-0">
             <span className="text-[11px] uppercase tracking-wider text-rose-200 block font-semibold">
               Contagem Regressiva
@@ -120,20 +132,37 @@ export default function DashboardPage() {
               <span className="text-xs font-medium text-rose-200">dias</span>
             </div>
             <p className="text-[11px] text-rose-100 mt-1">
-              {coupleProfile.weddingDate ? new Date(coupleProfile.weddingDate).toLocaleDateString('pt-BR', { dateStyle: 'full' }) : ''}
+              {coupleProfile.weddingDate || 'Data a definir'}
             </p>
           </div>
         </div>
       </div>
 
+      {/* Empty State Banner if completely fresh account */}
+      {isEmptyWorkspace && (
+        <div className="bg-surface p-8 rounded-3xl border border-border text-center shadow-card space-y-4">
+          <Compass className="w-10 h-10 text-marsala-500 mx-auto" />
+          <h2 className="font-serif text-xl font-bold text-charcoal">Seu Casamento está Prontinho para Começar!</h2>
+          <p className="text-xs text-slate-600 max-w-md mx-auto">
+            Você ainda não cadastrou tarefas, convidados ou orçamento. Preencha o onboarding com seus dados reais para gerar sua estrutura inicial personalizada.
+          </p>
+          <Link
+            href="/onboarding"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-marsala-500 text-white font-bold text-xs rounded-xl shadow-card hover:bg-marsala-600 transition-colors"
+          >
+            <Compass className="w-4 h-4" /> Iniciar Onboarding Personalizado
+          </Link>
+        </div>
+      )}
+
       {/* KPI Key Indicators Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Budget Overview */}
-        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle hover:shadow-card transition-shadow">
+        {/* Card 1: Budget */}
+        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Orçamento Planejado</span>
             <div className="p-2 rounded-xl bg-rose-50 text-marsala-500">
-              <DollarSign className="w-5 h-5" />
+              <DollarSign className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
@@ -141,240 +170,133 @@ export default function DashboardPage() {
               {formatBRL(coupleProfile.totalBudgetPlanned)}
             </span>
             <div className="flex items-center gap-2 mt-2 text-xs">
-              <span className="text-emerald-600 font-semibold">
-                {formatBRL(totalBudgetSpent)} contratado
-              </span>
-              <span className="text-slate-400">•</span>
-              <span className="text-slate-500">{Math.round((totalBudgetSpent / coupleProfile.totalBudgetPlanned) * 100)}%</span>
+              <span className="text-emerald-600 font-semibold">{formatBRL(totalBudgetSpent)} contratado</span>
             </div>
           </div>
         </div>
 
-        {/* Card 2: RSVP Progress */}
-        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle hover:shadow-card transition-shadow">
+        {/* Card 2: RSVP */}
+        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Evolução do RSVP</span>
+            <span className="text-xs font-semibold text-slate-500">Confirmados (RSVP)</span>
             <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
-              <Users className="w-5 h-5" />
+              <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <span className="font-serif text-2xl font-bold text-charcoal block">
-              {confirmedGuests} <span className="text-sm font-sans font-normal text-slate-500">/ {coupleProfile.estimatedGuestsCount}</span>
+              {confirmedGuests} <span className="text-xs font-sans font-normal text-slate-500">/ {coupleProfile.estimatedGuestsCount} estimados</span>
             </span>
             <div className="w-full bg-surface-muted h-2 rounded-full mt-2 overflow-hidden">
               <div
                 className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.round((confirmedGuests / coupleProfile.estimatedGuestsCount) * 100))}%` }}
+                style={{ width: `${Math.min(100, Math.round((confirmedGuests / (coupleProfile.estimatedGuestsCount || 1)) * 100))}%` }}
               />
             </div>
           </div>
         </div>
 
-        {/* Card 3: Cost Per Guest */}
-        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle hover:shadow-card transition-shadow">
+        {/* Card 3: Cost per Guest */}
+        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Custo por Convidado</span>
             <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
-              <TrendingUp className="w-5 h-5" />
+              <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <span className="font-serif text-2xl font-bold text-charcoal block">
-              {formatBRL(costPerGuest)}
+              {formatBRL(contractedCostPerGuest)}
             </span>
-            <p className="text-xs text-slate-500 mt-2">
-              Estimativa atual baseada em {confirmedGuests || coupleProfile.estimatedGuestsCount} convidados
-            </p>
+            <span className="text-[11px] text-slate-400 mt-1 block">
+              Planejado: {formatBRL(plannedCostPerGuest)} / pessoa
+            </span>
           </div>
         </div>
 
-        {/* Card 4: Tasks Progress */}
-        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle hover:shadow-card transition-shadow">
+        {/* Card 4: Checklist */}
+        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Checklist Concluído</span>
+            <span className="text-xs font-semibold text-slate-500">Checklist de Tarefas</span>
             <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
-              <CheckSquare className="w-5 h-5" />
+              <CheckSquare className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <span className="font-serif text-2xl font-bold text-charcoal block">
-              {tasks.filter((t) => t.status === 'concluida').length} <span className="text-sm font-sans font-normal text-slate-500">/ {tasks.length}</span>
+              {tasks.filter((t) => t.status === 'concluida').length} <span className="text-xs font-sans font-normal text-slate-500">/ {tasks.length}</span>
             </span>
-            <p className="text-xs text-amber-600 font-medium mt-2 flex items-center gap-1">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              {urgentTasks.length} decisões urgentes pendentes
-            </p>
+            <span className="text-[11px] text-rose-600 font-semibold mt-1 block">
+              {urgentTasks.length} urgentes pendentes
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Cross-Module Live Estimates Section */}
+      {/* Buffet & Drinks Impact */}
       <div className="bg-surface p-6 rounded-2xl border border-border shadow-card">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="font-serif text-lg font-bold text-charcoal flex items-center gap-2">
-              <Wine className="w-5 h-5 text-marsala-500" />
-              Impacto Dinâmico do RSVP em Buffet & Bebidas
+            <h2 className="font-serif text-base font-bold text-charcoal flex items-center gap-2">
+              <Wine className="w-4 h-4 text-marsala-500" />
+              Estimativa do RSVP no Buffet
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Cálculo automático em tempo real gerado pela lista de convidados confirmados.
+              Cálculos em tempo real baseados em {confirmedGuests || coupleProfile.estimatedGuestsCount} convidados.
             </p>
           </div>
-          <Link
-            href="/convidados"
-            className="text-xs font-semibold text-marsala-500 hover:text-marsala-600 flex items-center gap-1"
-          >
-            Gerenciar CRM <ChevronRight className="w-3.5 h-3.5" />
+          <Link href="/convidados" className="text-xs font-semibold text-marsala-500 hover:underline flex items-center gap-1">
+            CRM Convidados <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2 border-t border-border">
           <div className="p-3 bg-surface-muted rounded-xl text-center">
-            <span className="text-[11px] text-slate-500 block">Refeições Buffet</span>
-            <span className="font-bold text-charcoal text-base mt-0.5 block">{buffetEstimates.buffetMeals}</span>
+            <span className="text-[11px] text-slate-500 block">Refeições</span>
+            <span className="font-bold text-charcoal text-sm mt-0.5 block">{buffetEstimates.buffetMeals}</span>
           </div>
           <div className="p-3 bg-surface-muted rounded-xl text-center">
-            <span className="text-[11px] text-slate-500 block">Refrigerante/Suco</span>
-            <span className="font-bold text-charcoal text-base mt-0.5 block">{buffetEstimates.softDrinksLiters} L</span>
+            <span className="text-[11px] text-slate-500 block">Bebidas (L)</span>
+            <span className="font-bold text-charcoal text-sm mt-0.5 block">{buffetEstimates.softDrinksLiters} L</span>
           </div>
           <div className="p-3 bg-surface-muted rounded-xl text-center">
-            <span className="text-[11px] text-slate-500 block">Espumantes / Garrafas</span>
-            <span className="font-bold text-charcoal text-base mt-0.5 block">{buffetEstimates.sparklingBottles}</span>
+            <span className="text-[11px] text-slate-500 block">Espumante</span>
+            <span className="font-bold text-charcoal text-sm mt-0.5 block">{buffetEstimates.sparklingBottles} garrafas</span>
           </div>
           <div className="p-3 bg-surface-muted rounded-xl text-center">
             <span className="text-[11px] text-slate-500 block">Doces Finos</span>
-            <span className="font-bold text-charcoal text-base mt-0.5 block">{buffetEstimates.sweetsCount} un</span>
+            <span className="font-bold text-charcoal text-sm mt-0.5 block">{buffetEstimates.sweetsCount} un</span>
           </div>
           <div className="p-3 bg-surface-muted rounded-xl text-center">
-            <span className="text-[11px] text-slate-500 block">Lembrancinhas</span>
-            <span className="font-bold text-charcoal text-base mt-0.5 block">{buffetEstimates.favorsCount} un</span>
+            <span className="text-[11px] text-slate-500 block">Lembranças</span>
+            <span className="font-bold text-charcoal text-sm mt-0.5 block">{buffetEstimates.favorsCount} un</span>
           </div>
           <div className="p-3 bg-surface-muted rounded-xl text-center">
-            <span className="text-[11px] text-slate-500 block">Convites Físicos</span>
-            <span className="font-bold text-charcoal text-base mt-0.5 block">{buffetEstimates.invitesCount} un</span>
+            <span className="text-[11px] text-slate-500 block">Convites</span>
+            <span className="font-bold text-charcoal text-sm mt-0.5 block">{buffetEstimates.invitesCount} un</span>
           </div>
-        </div>
-      </div>
-
-      {/* Split Grid: Urgent Tasks & Next Financial Commitments */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Next Urgent Tasks */}
-        <div className="bg-surface p-6 rounded-2xl border border-border shadow-subtle flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-serif text-lg font-bold text-charcoal flex items-center gap-2">
-                <CheckSquare className="w-5 h-5 text-marsala-500" />
-                Próximas Decisões & Tarefas Urgentes
-              </h2>
-              <Link href="/checklist" className="text-xs text-marsala-500 font-semibold hover:underline">
-                Ver Todas
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {tasks.slice(0, 3).map((task) => (
-                <div
-                  key={task.id}
-                  className="p-3.5 rounded-xl border border-border bg-surface-muted/60 flex items-start justify-between gap-3"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-3.5 h-3.5 rounded-full mt-1 shrink-0 ${
-                        task.status === 'concluida'
-                          ? 'bg-emerald-500'
-                          : task.priority === 'urgente'
-                          ? 'bg-rose-500 animate-pulse'
-                          : 'bg-amber-400'
-                      }`}
-                    />
-                    <div>
-                      <h3 className="text-xs font-semibold text-charcoal">{task.title}</h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Categoria: {task.category} • Prazo: {task.dueDate}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-border text-slate-600">
-                    {task.status.replace('_', ' ')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <Link
-            href="/checklist"
-            className="mt-4 w-full py-2.5 bg-surface-muted text-charcoal font-semibold text-xs rounded-xl border border-border text-center hover:bg-rose-50 hover:text-marsala-500 transition-colors block"
-          >
-            Abrir Checklist em Kanban / Calendário
-          </Link>
-        </div>
-
-        {/* Upcoming Financial Due Dates */}
-        <div className="bg-surface p-6 rounded-2xl border border-border shadow-subtle flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-serif text-lg font-bold text-charcoal flex items-center gap-2">
-                <Clock className="w-5 h-5 text-marsala-500" />
-                Próximos Vencimentos de Contratos
-              </h2>
-              <Link href="/orcamento" className="text-xs text-marsala-500 font-semibold hover:underline">
-                Ver Orçamento
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {upcomingPayments.map((pay) => (
-                <div
-                  key={pay.id}
-                  className="p-3.5 rounded-xl border border-border bg-amber-50/40 flex items-center justify-between"
-                >
-                  <div>
-                    <span className="text-xs font-bold text-charcoal block">
-                      Parcela {pay.installmentNumber}/{pay.totalInstallments} — Quinta das Flores
-                    </span>
-                    <span className="text-[11px] text-slate-500 block mt-0.5">
-                      Vencimento: {new Date(pay.dueDate).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-serif text-sm font-bold text-marsala-500 block">
-                      {formatBRL(pay.amount)}
-                    </span>
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                      Pendente
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <Link
-            href="/orcamento"
-            className="mt-4 w-full py-2.5 bg-marsala-500 text-white font-semibold text-xs rounded-xl text-center hover:bg-marsala-600 transition-colors block shadow-card"
-          >
-            Gerenciar Fluxo Financeiro & Comprovantes
-          </Link>
         </div>
       </div>
 
       {/* Recent Activity Log */}
       <div className="bg-surface p-6 rounded-2xl border border-border shadow-subtle">
-        <h2 className="font-serif text-lg font-bold text-charcoal mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-slate-500" />
-          Atividade Recente & Auditoria no Workspace
+        <h2 className="font-serif text-base font-bold text-charcoal mb-3 flex items-center gap-2">
+          <Clock className="w-4 h-4 text-slate-400" />
+          Atividade Recente no Workspace
         </h2>
-        <div className="space-y-3">
-          {activityLogs.map((log) => (
+        <div className="space-y-2">
+          {activityLogs.slice(0, 5).map((log) => (
             <div key={log.id} className="flex items-center justify-between text-xs py-2 border-b border-border/60 last:border-none">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-marsala-500" />
-                <div>
-                  <span className="font-semibold text-charcoal">{log.userName}</span>
-                  <span className="text-slate-500 ml-2">{log.action}: {log.details}</span>
-                </div>
+              <div>
+                <span className="font-bold text-charcoal">{log.userName}</span>
+                <span className="text-slate-500 ml-2">{log.action}: {log.details}</span>
               </div>
               <span className="text-[10px] text-slate-400 font-mono">{log.timestamp}</span>
             </div>
           ))}
+          {activityLogs.length === 0 && (
+            <p className="text-xs text-slate-400 text-center py-4">Nenhuma atividade recente registrada.</p>
+          )}
         </div>
       </div>
     </div>
