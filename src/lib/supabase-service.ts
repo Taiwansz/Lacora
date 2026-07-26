@@ -126,4 +126,30 @@ export const SupabaseService = {
       return false;
     }
   },
+
+  // --- AUTENTICAÇÃO SUPABASE ---
+  async signUpUser(email: string, pass: string, name: string) {
+    if (!isSupabaseConfigured()) return;
+    try {
+      await supabase.auth.signUp({
+        email,
+        password: pass,
+        options: { data: { full_name: name } },
+      });
+    } catch (err) {
+      console.warn('Supabase signUpUser fallback:', err);
+    }
+  },
+
+  async signInUser(email: string, pass: string) {
+    if (!isSupabaseConfigured()) return;
+    try {
+      await supabase.auth.signInWithPassword({
+        email,
+        password: pass,
+      });
+    } catch (err) {
+      console.warn('Supabase signInUser fallback:', err);
+    }
+  },
 };

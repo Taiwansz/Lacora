@@ -319,17 +319,32 @@ export const useAppStore = create<AppStoreState>()(
 
       // Auth Implementation
       login: (email, pass) => {
+        const cleanEmail = email.trim().toLowerCase();
         const users = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('nosso_users') || '[]') : [];
-        const user = users.find((u: User) => u.email.toLowerCase() === email.toLowerCase());
-        
-        if (!user && email !== 'demo@nossograndedia.app') {
-          return { success: false, error: 'Usuário não encontrado. Crie uma conta para acessar.' };
+        let user = users.find((u: User) => u.email.toLowerCase() === cleanEmail);
+
+        if (!user && cleanEmail !== 'demo@nossograndedia.app') {
+          // Permite criação de sessão automática para noiva/noivo sem bloquear com erro de conta inexistente
+          const rawName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ');
+          const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+          user = {
+            id: `user-${Date.now()}`,
+            name: formattedName,
+            email: cleanEmail,
+            emailVerified: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('nosso_users', JSON.stringify([...users, user]));
+          }
         }
 
         const validUser: User = user || {
           id: 'user-auth-real',
-          name: email.split('@')[0] || 'Usuário',
-          email,
+          name: cleanEmail.split('@')[0] || 'Usuário',
+          email: cleanEmail,
           emailVerified: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -339,18 +354,26 @@ export const useAppStore = create<AppStoreState>()(
           currentUser: validUser,
           isAuthenticated: true,
         });
+        SupabaseService.signInUser(cleanEmail, pass);
         return { success: true };
       },
 
       signup: (name, email, pass) => {
+        const cleanEmail = email.trim().toLowerCase();
         const newUser: User = {
           id: `user-${Date.now()}`,
           name,
-          email,
-          emailVerified: false,
+          email: cleanEmail,
+          emailVerified: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
+
+        if (typeof window !== 'undefined') {
+          const existingUsers = JSON.parse(localStorage.getItem('nosso_users') || '[]');
+          const filtered = existingUsers.filter((u: User) => u.email.toLowerCase() !== cleanEmail);
+          localStorage.setItem('nosso_users', JSON.stringify([...filtered, newUser]));
+        }
 
         set({
           currentUser: newUser,
@@ -359,6 +382,7 @@ export const useAppStore = create<AppStoreState>()(
 
         // Automatically create clean workspace for real user
         get().createNewRealWorkspace(`Casamento de ${name}`, name.split(' ')[0] || 'Noivo(a) 1', 'Noivo(a) 2');
+        SupabaseService.signUpUser(cleanEmail, pass, name);
         return { success: true };
       },
 
