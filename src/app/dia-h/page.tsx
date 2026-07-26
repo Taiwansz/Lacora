@@ -2,101 +2,96 @@
 
 import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { generateSimplePDF } from '@/lib/utils';
-import { Clock, Download, Printer, Plus, Phone, MapPin, UserCheck, Shield } from 'lucide-react';
+import { Clock, Plus, Phone, MapPin, User, CheckCircle2 } from 'lucide-react';
 
 export default function DiaHPage() {
-  const { timeline, addTimelineItem, activeRole } = useAppStore();
+  const { timeline, addTimelineItem, getCurrentRole } = useAppStore();
   const [filterProfile, setFilterProfile] = useState<string>('todos');
 
-  const filteredTimeline = timeline.filter((item) => {
-    if (filterProfile !== 'todos' && !item.visibleToProfiles.includes(filterProfile as any)) return false;
-    return true;
-  });
+  const currentRole = getCurrentRole();
 
-  const handlePrintPDF = () => {
-    const headers = ['Horário', 'Evento / Etapa', 'Local', 'Responsável & Instruções'];
-    const rows = filteredTimeline.map((item) => [
-      item.time,
-      item.title,
-      item.location,
-      `${item.responsiblePerson} — ${item.instructions || ''}`,
-    ]);
-    generateSimplePDF('Cronograma Operacional do Grande Dia - Minuto a Minuto', headers, rows);
-  };
+  const filteredTimeline = timeline.filter((item) => {
+    if (filterProfile === 'todos') return true;
+    return item.visibleToProfiles.includes(filterProfile as any);
+  });
 
   return (
     <div className="space-y-8">
-      {/* Header Banner */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface p-6 rounded-3xl border border-border shadow-subtle">
         <div>
           <span className="text-xs font-semibold text-rose-500 uppercase tracking-wider block">
-            Operacional do Grande Dia (Dia H)
+            Operação do Grande Dia
           </span>
           <h1 className="font-serif text-2xl font-bold text-charcoal mt-1">
-            Cronograma Minuto a Minuto & Visões por Perfil
+            Cronograma Minuto a Minuto (Dia H)
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Planejamento sequencial da montagem, beleza, cerimônia, recepção e desmontagem com acesso offline e PDF.
+            Guia de execução com responsáveis, fornecedores envolvidos, horários e notas de contingência.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handlePrintPDF}
-            className="flex items-center gap-2 bg-marsala-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-card hover:bg-marsala-600 transition-colors"
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-slate-500">Filtrar para:</span>
+          <select
+            value={filterProfile}
+            onChange={(e) => setFilterProfile(e.target.value)}
+            className="text-xs font-semibold p-2 border border-border rounded-xl bg-surface-muted outline-none"
           >
-            <Printer className="w-4 h-4" /> Exportar PDF / Imprimir
-          </button>
+            <option value="todos">Todos os Eventos</option>
+            <option value="casal_admin">Casal & Padrinhos</option>
+            <option value="cerimonialista">Cerimonial & Staff</option>
+            <option value="fornecedor">Fornecedores</option>
+          </select>
         </div>
       </div>
 
-      {/* Profile Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto bg-surface p-3 rounded-2xl border border-border">
-        <span className="text-xs font-bold text-slate-500 mr-2 shrink-0">Filtrar Visão:</span>
-        {[
-          { id: 'todos', label: 'Visão Completa (Cerimonial)' },
-          { id: 'casal_admin', label: 'Visão do Casal' },
-          { id: 'fornecedor', label: 'Visão Fornecedores & Equipes' },
-          { id: 'convidado', label: 'Visão dos Convidados' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setFilterProfile(tab.id)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-              filterProfile === tab.id
-                ? 'bg-marsala-500 text-white shadow-subtle'
-                : 'bg-surface-muted text-slate-600 hover:bg-rose-50'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Timeline Stream */}
+      <div className="bg-surface p-6 sm:p-8 rounded-3xl border border-border shadow-card space-y-6">
+        <h2 className="font-serif text-lg font-bold text-charcoal flex items-center gap-2">
+          <Clock className="w-5 h-5 text-marsala-500" />
+          Roteiro Oficial do Casamento
+        </h2>
 
-      {/* Timeline Minute-by-Minute Table */}
-      <div className="bg-surface rounded-3xl border border-border shadow-card overflow-hidden">
-        <div className="divide-y divide-border">
+        <div className="relative pl-6 border-l-2 border-border space-y-6">
           {filteredTimeline.map((item) => (
-            <div key={item.id} className="p-6 hover:bg-surface-muted/40 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="w-16 text-center shrink-0">
-                  <span className="font-serif text-xl font-bold text-marsala-500 block leading-none">{item.time}</span>
-                  <span className="text-[10px] text-slate-400 font-medium block mt-1">{item.durationMinutes} min</span>
+            <div key={item.id} className="relative group">
+              {/* Point Dot */}
+              <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-marsala-500 bg-surface group-hover:bg-marsala-500 transition-colors" />
+
+              <div className="p-4 rounded-2xl border border-border bg-surface-muted/30 space-y-2 hover:bg-surface-muted transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-sm font-bold text-marsala-500">{item.time}</span>
+                  <span className="text-[10px] text-slate-400 font-medium">{item.durationMinutes} minutos</span>
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-charcoal">{item.title}</h3>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-400" /> {item.location}</span>
-                    <span className="flex items-center gap-1"><UserCheck className="w-3.5 h-3.5 text-slate-400" /> {item.responsiblePerson}</span>
-                  </div>
-                  {item.instructions && (
-                    <p className="text-xs text-slate-600 bg-surface-muted p-2.5 rounded-xl mt-2 border border-border/50">
-                      {item.instructions}
-                    </p>
+                <h3 className="font-serif text-base font-bold text-charcoal">{item.title}</h3>
+
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 pt-1">
+                  <span className="flex items-center gap-1 font-semibold text-charcoal">
+                    <User className="w-3.5 h-3.5 text-slate-400" /> {item.responsiblePerson}
+                  </span>
+                  <span className="flex items-center gap-1 text-slate-500">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400" /> {item.location}
+                  </span>
+                  {item.phoneContact && (
+                    <span className="flex items-center gap-1 text-slate-500">
+                      <Phone className="w-3.5 h-3.5 text-slate-400" /> {item.phoneContact}
+                    </span>
                   )}
                 </div>
+
+                {item.instructions && (
+                  <p className="text-xs text-slate-600 bg-surface p-2.5 rounded-xl border border-border/80">
+                    <strong>Instruções:</strong> {item.instructions}
+                  </p>
+                )}
+
+                {item.contingencyNote && (
+                  <p className="text-xs text-amber-900 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                    <strong>Contingência:</strong> {item.contingencyNote}
+                  </p>
+                )}
               </div>
             </div>
           ))}
