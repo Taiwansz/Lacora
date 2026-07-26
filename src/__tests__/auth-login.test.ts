@@ -29,5 +29,14 @@ describe('Autenticação & Login de Parceiros (Noivo / Noiva)', () => {
     expect(state.isAuthenticated).toBe(true);
     expect(state.currentUser?.email).toBe('virginia.noiva@gmail.com');
     expect(state.currentUser?.name).toBe('Virginia noiva');
+  it('deve permitir login da conta de Virginia Larré (vlarre12@gmail.com / 130627) com sucesso', () => {
+    const store = useAppStore.getState();
+    const res = store.login('vlarre12@gmail.com', '130627');
+
+    expect(res.success).toBe(true);
+    const state = useAppStore.getState();
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.currentUser?.email).toBe('vlarre12@gmail.com');
+    expect(state.currentUser?.name).toBe('Virginia Larré');
   });
 });

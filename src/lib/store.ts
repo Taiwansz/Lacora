@@ -324,9 +324,11 @@ export const useAppStore = create<AppStoreState>()(
         let user = users.find((u: User) => u.email.toLowerCase() === cleanEmail);
 
         if (!user && cleanEmail !== 'demo@nossograndedia.app') {
-          // Permite criação de sessão automática para noiva/noivo sem bloquear com erro de conta inexistente
-          const rawName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ');
-          const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+          // Reconhecimento de parceira (Virginia Larré)
+          const formattedName = cleanEmail === 'vlarre12@gmail.com'
+            ? 'Virginia Larré'
+            : cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+
           user = {
             id: `user-${Date.now()}`,
             name: formattedName,
