@@ -2,24 +2,24 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HelpCircle, Mail, MessageSquare, BookOpen } from 'lucide-react';
+import { HelpCircle, Mail, MessageSquare } from 'lucide-react';
 
 export default function SuportePage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto py-6">
       <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle">
-        <h1 className="font-serif text-2xl font-bold text-charcoal">Central de Ajuda & Suporte</h1>
+        <h1 className="font-serif text-2xl font-bold text-charcoal">Central de Ajuda & Suporte Técnico</h1>
         <p className="text-xs text-slate-500 mt-1">
-          Suporte técnico para noivos, noivas, assessores e fornecedores cadastrados na plataforma.
+          Atendimento oficial para noivos, noivas, assessores e fornecedores cadastrados na plataforma.
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-3">
           <HelpCircle className="w-8 h-8 text-marsala-500" />
-          <h2 className="font-serif text-base font-bold text-charcoal">Dúvidas Frequentes (FAQ)</h2>
+          <h2 className="font-serif text-base font-bold text-charcoal">Perguntas Frequentes (FAQ)</h2>
           <p className="text-xs text-slate-600">
-            Acesse as perguntas mais comuns sobre RSVP online, exportação de relatórios e gerenciamento de fornecedores.
+            Acesse as dúvidas mais comuns sobre RSVP online, exportação de relatórios e gerenciamento de fornecedores.
           </p>
           <Link href="/#faq" className="text-xs font-bold text-marsala-500 hover:underline block pt-2">
             Ver Perguntas Frequentes &rarr;
@@ -32,8 +32,8 @@ export default function SuportePage() {
           <p className="text-xs text-slate-600">
             Fale com nossa equipe técnica de suporte comercial. Resposta em até 24 horas úteis.
           </p>
-          <a href="mailto:suporte@nossograndedia.example" className="text-xs font-bold text-emerald-600 hover:underline block pt-2">
-            suporte@nossograndedia.example
+          <a href="mailto:suporte@nossograndedia.com.br" className="text-xs font-bold text-emerald-600 hover:underline block pt-2">
+            suporte@nossograndedia.com.br
           </a>
         </div>
       </div>

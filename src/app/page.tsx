@@ -21,6 +21,7 @@ import {
   HeartHandshake
 } from 'lucide-react';
 import { formatBRL } from '@/lib/utils';
+import { SUBSCRIPTION_PLANS } from '@/lib/plans';
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState<'orcamento' | 'convidados' | 'mesas' | 'cronograma'>('orcamento');
@@ -28,20 +29,24 @@ export default function LandingPage() {
 
   const faqItems = [
     {
+      q: 'Como funciona o teste grátis de 14 dias?',
+      a: 'Você pode criar seu workspace no Plano Pro e utilizar todas as funcionalidades por 14 dias sem cobrança. Caso opte por não continuar ao final do período, sua conta será mantida no plano Starter Gratuito com acesso aos seus dados.',
+    },
+    {
       q: 'Como funciona a segurança e o isolamento dos dados do meu casamento?',
-      a: 'Cada conta possui um workspace exclusivo isolado logicamente por ID de workspace e protegido por políticas rígidas de segurança (Row Level Security). Seus dados não são compartilhados e apenas usuários convidados por você possuem acesso.',
+      a: 'Cada conta possui um workspace exclusivo isolado logicamente por ID de workspace e protegido por políticas de segurança no banco de dados (Row Level Security). Seus dados são criptografados em trânsito (HTTPS / TLS 1.3) e em repouso (AES-256).',
     },
     {
       q: 'O site do casal e o RSVP online possuem custos adicionais?',
-      a: 'Não. O construtor de site do casal e a confirmação de presença (RSVP) online estão inclusos na plataforma, permitindo gerar links únicos e seguros para os convidados.',
+      a: 'Não. O construtor de site do casal e a confirmação de presença (RSVP) online estão inclusos no plano Pro, permitindo gerar links únicos e seguros para os convidados.',
     },
     {
       q: 'Posso convidar meu cônjuge, cerimonialista ou assessoria para gerenciar juntos?',
-      a: 'Sim! A plataforma suporta múltiplos colaboradores com controle de acesso por função. Você pode atribuir papéis como Administrador do Casal, Cerimonial/Assessoria, Colaborador ou Visualizador Financeiro.',
+      a: 'Sim. A plataforma suporta múltiplos colaboradores com controle de acesso por função (RBAC). Você pode atribuir papéis como Administrador do Casal, Cerimonial/Assessoria, Colaborador ou Visualizador Financeiro.',
     },
     {
       q: 'Como é calculado o custo por convidado no módulo financeiro?',
-      a: 'Diferente de cálculos simplistas, nossa plataforma separa o custo por convidado previsto no contrato, o custo projetado por confirmações efetuadas e o valor efetivamente pago, garantindo previsões financeiras precisas.',
+      a: 'Nossa plataforma separa o teto por convidado planejado, o custo por convidado previsto no contrato e o valor projetado por confirmações efetuadas, evitando distorções financeiras.',
     },
   ];
 
@@ -67,7 +72,7 @@ export default function LandingPage() {
             href="/cadastro"
             className="w-full sm:w-auto px-8 py-3.5 bg-marsala-500 hover:bg-marsala-600 text-white font-bold text-xs rounded-xl shadow-card transition-colors flex items-center justify-center gap-2"
           >
-            <span>Iniciar Workspace Gratuito</span>
+            <span>Iniciar Teste Grátis de 14 Dias</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
@@ -82,15 +87,15 @@ export default function LandingPage() {
         <div className="pt-8 flex items-center justify-center gap-6 text-xs text-slate-400 font-medium">
           <div className="flex items-center gap-1.5">
             <Shield className="w-4 h-4 text-emerald-600" />
-            <span>Isolamento Total de Dados</span>
+            <span>Isolamento Tenant RLS</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Lock className="w-4 h-4 text-marsala-500" />
-            <span>Criptografia de Ponta</span>
+            <span>Criptografia em Trânsito & Repouso</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Globe className="w-4 h-4 text-indigo-600" />
-            <span>Conformidade LGPD</span>
+            <span>Conformidade LGPD (Lei nº 13.709/2018)</span>
           </div>
         </div>
       </section>
@@ -260,38 +265,36 @@ export default function LandingPage() {
       <section className="space-y-8" id="precos">
         <div className="text-center space-y-2">
           <span className="text-xs font-semibold text-rose-500 uppercase tracking-wider">
-            Planos & Assinaturas
+            Planos Comerciais & Assinaturas
           </span>
           <h2 className="font-serif text-2xl sm:text-3xl font-bold text-charcoal">
-            Transparência sem Surpresas
+            Transparência Sem Surpresas
           </h2>
           <p className="text-xs text-slate-500 max-w-xl mx-auto">
-            Escolha o plano ideal para a dimensão do seu evento ou assessoria.
+            Escolha o plano ideal com 14 dias de teste grátis no plano Pro.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {/* Plan 1 */}
+          {/* Plan 1: Starter */}
           <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle space-y-6 flex flex-col justify-between">
             <div className="space-y-4">
               <div>
-                <span className="text-xs font-bold uppercase text-slate-400 tracking-wider">Starter / Gratuito</span>
-                <h3 className="font-serif text-2xl font-bold text-charcoal mt-1">R$ 0</h3>
-                <p className="text-xs text-slate-500 mt-1">Ideal para iniciar o planejamento inicial e teste.</p>
+                <span className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                  {SUBSCRIPTION_PLANS.starter.name}
+                </span>
+                <h3 className="font-serif text-2xl font-bold text-charcoal mt-1">
+                  {SUBSCRIPTION_PLANS.starter.formattedPrice}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">{SUBSCRIPTION_PLANS.starter.description}</p>
               </div>
               <ul className="space-y-2.5 text-xs text-slate-600">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Até 50 convidados cadastrados</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Orçamento com categorias básicas</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Checklist essencial de tarefas</span>
-                </li>
+                {SUBSCRIPTION_PLANS.starter.features.map((f, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-marsala-500 shrink-0" />
+                    <span>{f}</span>
+                  </li>
+                ))}
               </ul>
             </div>
             <Link
@@ -302,69 +305,63 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Plan 2 - Featured */}
+          {/* Plan 2: Pro (Featured) */}
           <div className="bg-surface p-6 rounded-3xl border-2 border-marsala-500 shadow-card space-y-6 flex flex-col justify-between relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-marsala-500 text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
-              Mais Recomendado
+              14 Dias Grátis
             </div>
             <div className="space-y-4">
               <div>
-                <span className="text-xs font-bold uppercase text-marsala-500 tracking-wider">Plano Pro / Completo</span>
+                <span className="text-xs font-bold uppercase text-marsala-500 tracking-wider">
+                  {SUBSCRIPTION_PLANS.pro.name}
+                </span>
                 <h3 className="font-serif text-2xl font-bold text-charcoal mt-1">
-                  R$ 49 <span className="text-xs font-sans text-slate-400 font-normal">/ mês</span>
+                  {SUBSCRIPTION_PLANS.pro.formattedPrice}{' '}
+                  <span className="text-xs font-sans text-slate-400 font-normal">
+                    / {SUBSCRIPTION_PLANS.pro.billingPeriod}
+                  </span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">Tudo o que você precisa para o seu casamento do início ao fim.</p>
+                <p className="text-xs text-slate-500 mt-1">{SUBSCRIPTION_PLANS.pro.description}</p>
               </div>
               <ul className="space-y-2.5 text-xs text-slate-600">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Convidados ilimitados & RSVP Online</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Planta de Mesas & Seating Chart</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Site do Casal Personalizado com Slug</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Upload de Documentos & Contratos</span>
-                </li>
+                {SUBSCRIPTION_PLANS.pro.features.map((f, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-marsala-500 shrink-0" />
+                    <span>{f}</span>
+                  </li>
+                ))}
               </ul>
             </div>
             <Link
               href="/cadastro"
               className="w-full py-3 bg-marsala-500 hover:bg-marsala-600 text-white font-bold text-xs rounded-xl shadow-card text-center transition-colors block"
             >
-              Começar Teste de 14 Dias
+              Iniciar Teste de 14 Dias
             </Link>
           </div>
 
-          {/* Plan 3 */}
+          {/* Plan 3: Assessoria */}
           <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle space-y-6 flex flex-col justify-between">
             <div className="space-y-4">
               <div>
-                <span className="text-xs font-bold uppercase text-slate-400 tracking-wider">Assessoria & Cerimonial</span>
+                <span className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                  {SUBSCRIPTION_PLANS.assessoria.name}
+                </span>
                 <h3 className="font-serif text-2xl font-bold text-charcoal mt-1">
-                  R$ 149 <span className="text-xs font-sans text-slate-400 font-normal">/ mês</span>
+                  {SUBSCRIPTION_PLANS.assessoria.formattedPrice}{' '}
+                  <span className="text-xs font-sans text-slate-400 font-normal">
+                    / {SUBSCRIPTION_PLANS.assessoria.billingPeriod}
+                  </span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">Para assessores e cerimonialistas gerenciando múltiplos eventos.</p>
+                <p className="text-xs text-slate-500 mt-1">{SUBSCRIPTION_PLANS.assessoria.description}</p>
               </div>
               <ul className="space-y-2.5 text-xs text-slate-600">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Múltiplos workspaces simultâneos</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Permissões RBAC avançadas por cliente</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-marsala-500" />
-                  <span>Exportação de relatórios executivos em PDF/CSV</span>
-                </li>
+                {SUBSCRIPTION_PLANS.assessoria.features.map((f, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-marsala-500 shrink-0" />
+                    <span>{f}</span>
+                  </li>
+                ))}
               </ul>
             </div>
             <Link

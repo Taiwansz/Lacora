@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { formatDate, formatDateLong, getDaysCountdown, formatBRL } from '../lib/utils';
 import { useAppStore } from '../lib/store';
+import { SUBSCRIPTION_PLANS } from '../lib/plans';
 
 describe('Utilitários de Data & Formatação Civil', () => {
   it('deve formatar data civil YYYY-MM-DD sem recuo de fuso horário UTC (14/11/2027)', () => {
@@ -21,6 +22,16 @@ describe('Utilitários de Data & Formatação Civil', () => {
 
   it('deve formatar valores monetários em BRL', () => {
     expect(formatBRL(12500)).toContain('12.500');
+  });
+});
+
+describe('Planos Comerciais & Consistência de Faturamento', () => {
+  it('deve ter a única fonte de verdade para planos com o preço do Plano Pro em R$ 89,90 e 14 dias grátis', () => {
+    expect(SUBSCRIPTION_PLANS.pro.price).toBe(89.90);
+    expect(SUBSCRIPTION_PLANS.pro.formattedPrice).toBe('R$ 89,90');
+    expect(SUBSCRIPTION_PLANS.pro.trialDays).toBe(14);
+    expect(SUBSCRIPTION_PLANS.starter.price).toBe(0);
+    expect(SUBSCRIPTION_PLANS.assessoria.price).toBe(199.00);
   });
 });
 

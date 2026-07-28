@@ -8,36 +8,39 @@ export default function TermosPage() {
       <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle">
         <h1 className="font-serif text-2xl font-bold text-charcoal">Termos de Uso e Serviço</h1>
         <p className="text-xs text-slate-500 mt-1">
-          Condições de uso da plataforma SaaS Nosso Grande Dia. Última atualização: Julho de 2026.
+          Condições gerais de prestação de serviços da plataforma SaaS Nosso Grande Dia Tecnologia Ltda. Última atualização: Julho de 2026 (Versão 2.1).
         </p>
       </div>
 
       <div className="bg-surface p-6 sm:p-8 rounded-3xl border border-border shadow-card space-y-6 text-xs text-slate-600 leading-relaxed">
         <section className="space-y-2">
-          <h2 className="font-serif text-base font-bold text-charcoal">1. Objeto e Aceitação</h2>
+          <h2 className="font-serif text-base font-bold text-charcoal">1. Identificação do Operador e Aceitação</h2>
           <p>
-            Estes Termos de Uso regulam o acesso e utilização da plataforma SaaS "Nosso Grande Dia". Ao se cadastrar ou criar um workspace, você declara ter lido, compreendido e aceito integralmente todas as condições descritas.
+            Esta plataforma SaaS é desenvolvida e mantida pela <strong>Nosso Grande Dia Tecnologia Ltda.</strong>, empresa brasileira com sede em São Paulo - SP. Ao cadastrar-se ou criar um workspace, o usuário concorda expressamente com os presentes Termos de Uso e com nossa Política de Privacidade.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="font-serif text-base font-bold text-charcoal">2. Responsabilidade sobre os Dados</h2>
+          <h2 className="font-serif text-base font-bold text-charcoal">2. Responsabilidade pelos Dados e Isolamento Tenant</h2>
           <p>
-            O usuário administrador é responsável pela exatidão dos dados inseridos no workspace, incluindo dados de convidados, contratos e valores orçamentários. A plataforma fornece isolamento multi-tenant por workspace.
+            Cada conta opera em um workspace isolado via políticas de segurança no banco de dados (Row Level Security). O usuário administrador é o único responsável pela exatidão e legicidade dos dados inseridos no sistema, incluindo dados de convidados, contratos e finanças.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="font-serif text-base font-bold text-charcoal">3. Planos, Assinaturas e Cancelamento</h2>
+          <h2 className="font-serif text-base font-bold text-charcoal">3. Planos, Teste Grátis de 14 Dias e Cancelamento</h2>
           <p>
-            A plataforma oferece planos com cobrança recorrente. O cancelamento pode ser efetuado a qualquer momento no módulo de Assinatura, garantindo acesso até o término do ciclo vigente.
+            O Plano Pro inclui 14 dias de teste gratuito sem necessidade de pagamento prévio. O cancelamento pode ser efetuado a qualquer momento no módulo de Assinatura, garantindo que o acesso permaneça ativo até o término do período de cobrança contratado, sem taxas rescisórias ocultas.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="font-serif text-base font-bold text-charcoal">4. Propriedade Intelectual</h2>
+          <h2 className="font-serif text-base font-bold text-charcoal">4. Canais de Atendimento e Suporte</h2>
           <p>
-            Todos os direitos sobre a marca, layout, código-fonte e arquitetura SaaS pertencem ao Nosso Grande Dia Tecnologia.
+            Dúvidas operacionais ou solicitações de suporte comercial devem ser encaminhadas para{' '}
+            <a href="mailto:suporte@nossograndedia.com.br" className="font-bold text-marsala-500 hover:underline">
+              suporte@nossograndedia.com.br
+            </a>.
           </p>
         </section>
       </div>

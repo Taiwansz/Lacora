@@ -23,15 +23,15 @@ export default function ContatoPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-4">
-          <h2 className="font-serif text-base font-bold text-charcoal">Canais de Atendimento</h2>
+          <h2 className="font-serif text-base font-bold text-charcoal">Canais Oficiais de Atendimento</h2>
           <div className="space-y-3 text-xs text-slate-600">
             <p className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-marsala-500" />
-              <span>comercial@nossograndedia.example</span>
+              <span>comercial@nossograndedia.com.br</span>
             </p>
             <p className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-emerald-600" />
-              <span>(11) 99999-0000 (WhatsApp Comercial)</span>
+              <span>(11) 3000-0000 (Central de Atendimento)</span>
             </p>
             <p className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-indigo-600" />
@@ -44,8 +44,8 @@ export default function ContatoPage() {
           {submitted ? (
             <div className="p-6 bg-emerald-50 border border-emerald-200 text-center rounded-2xl space-y-2">
               <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-              <h3 className="font-bold text-sm text-emerald-900">Mensagem Enviada!</h3>
-              <p className="text-xs text-emerald-700">Entraremos em contato em breve.</p>
+              <h3 className="font-bold text-sm text-emerald-900">Mensagem Enviada com Sucesso!</h3>
+              <p className="text-xs text-emerald-700">Nossa equipe comercial retornará em até 24h úteis.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -57,8 +57,8 @@ export default function ContatoPage() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
-                  placeholder="Seu nome"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
+                  placeholder="Seu nome completo"
                 />
               </div>
 
@@ -70,8 +70,8 @@ export default function ContatoPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
-                  placeholder="seuemail@exemplo.com"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
+                  placeholder="seuemail@empresa.com.br"
                 />
               </div>
 
@@ -82,14 +82,14 @@ export default function ContatoPage() {
                   required
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none h-20"
-                  placeholder="Como podemos ajudar?"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none h-20 focus:ring-2 focus:ring-marsala-500"
+                  placeholder="Como podemos ajudar o seu evento?"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-marsala-500 hover:bg-marsala-600 text-white font-bold text-xs rounded-xl shadow-card flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-marsala-500 hover:bg-marsala-600 text-white font-bold text-xs rounded-xl shadow-card flex items-center justify-center gap-2 transition-colors"
               >
                 <Send className="w-3.5 h-3.5" /> Enviar Mensagem
               </button>
