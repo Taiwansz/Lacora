@@ -99,16 +99,22 @@ export interface AppStoreState {
 
   // Auth Actions
   login: (email: string, pass: string) => { success: boolean; error?: string };
-  signup: (name: string, email: string, pass: string) => { success: boolean; error?: string };
+  signup: (
+    name: string,
+    email: string,
+    pass: string,
+    confirmPass: string,
+    acceptedTerms: boolean
+  ) => { success: boolean; error?: string };
   logout: () => void;
   verifyEmail: () => void;
-  updatePassword: (newPass: string) => void;
-  deleteAccount: () => void;
+  updatePassword: (oldPass: string, newPass: string) => { success: boolean; error?: string };
+  deleteAccount: (pass: string) => { success: boolean; error?: string };
   enterDemoMode: () => void;
 
   // Workspace & Membership Actions
   setActiveWorkspace: (workspaceId: string) => void;
-  createNewRealWorkspace: (weddingName: string, partner1: string, partner2: string) => void;
+  createNewRealWorkspace: (weddingName: string, partner1: string, partner2: string) => string;
   deleteCurrentWorkspace: () => void;
   inviteTeamMember: (email: string, role: UserRole) => void;
 
@@ -165,8 +171,9 @@ export interface AppStoreState {
   // Dynamic Math & Report Helpers
   getConfirmedGuestsCount: () => number;
   getCostPerGuestMetrics: () => {
-    plannedCostPerGuest: number;
-    contractedCostPerGuest: number;
+    targetCostPerPerson: number;
+    contractedCostPerEstimatedGuest: number;
+    projectedCostPerConfirmedGuest: number;
     paidCostPerGuest: number;
   };
   getBuffetEstimates: () => {
@@ -179,6 +186,23 @@ export interface AppStoreState {
   };
 }
 
+// Strong Password Rule Check
+export function validateStrongPassword(pass: string): { valid: boolean; message?: string } {
+  if (pass.length < 8) {
+    return { valid: false, message: 'A senha deve conter no mínimo 8 caracteres.' };
+  }
+  if (!/[A-Z]/.test(pass)) {
+    return { valid: false, message: 'A senha deve conter pelo menos uma letra maiúscula.' };
+  }
+  if (!/[0-9]/.test(pass)) {
+    return { valid: false, message: 'A senha deve conter pelo menos um número.' };
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass)) {
+    return { valid: false, message: 'A senha deve conter pelo menos um símbolo especial.' };
+  }
+  return { valid: true };
+}
+
 export const useAppStore = create<AppStoreState>()(
   persist(
     (set, get) => ({
@@ -186,13 +210,13 @@ export const useAppStore = create<AppStoreState>()(
       currentUser: null,
       isAuthenticated: false,
 
-      // Initial Workspaces & Memberships
+      // Initial Workspaces & Memberships (Fictional Demo Workspace)
       activeWorkspaceId: DEMO_WORKSPACE_ID,
       workspaces: [
         {
           id: DEMO_WORKSPACE_ID,
-          name: 'Casamento Matheus & Virginia (Demonstração)',
-          slug: 'matheus-virginia-demo',
+          name: 'Casamento Modelo (Demonstração)',
+          slug: 'alex-taylor-demo',
           isDemoWorkspace: true,
           ownerId: 'demo-user-owner',
           createdAt: '2026-01-01',
@@ -204,8 +228,8 @@ export const useAppStore = create<AppStoreState>()(
           id: 'mem-demo-1',
           workspaceId: DEMO_WORKSPACE_ID,
           userId: 'demo-user-owner',
-          userName: 'Matheus Sousa',
-          userEmail: 'matheus@exemplo.com',
+          userName: 'Alex Silva',
+          userEmail: 'alex@exemplo.example',
           role: 'casal_admin',
           permissions: {
             canEditBudget: true,
@@ -285,7 +309,7 @@ export const useAppStore = create<AppStoreState>()(
           category: 'clima',
           probability: 'media',
           impact: 'alto',
-          ownerName: 'Cerimonialista Juliana',
+          ownerName: 'Cerimonialista Responsável',
           triggerEvent: 'Previsão do tempo superior a 60% de chuva',
           preventivePlan: 'Instalação da cobertura envidraçada na pergola 24h antes',
           responsePlan: 'Mudar a cerimônia para a área coberta às 13:30h',
@@ -294,13 +318,13 @@ export const useAppStore = create<AppStoreState>()(
       ],
       civilInfo: {
         workspaceId: DEMO_WORKSPACE_ID,
-        cartorioName: 'Cartório de Registro Civil de Campos do Jordão',
-        cartorioCity: 'Campos do Jordão',
+        cartorioName: 'Cartório de Registro Civil das Pessoas Naturais',
+        cartorioCity: 'São Paulo',
         cartorioState: 'SP',
         regimeDeBens: 'comunhao_parcial',
         hasPactoAntenupcial: false,
         processStatus: 'habilitado',
-        expirationDate: '2026-12-10',
+        expirationDate: '2027-12-10',
         checklists: [
           { id: 'c1', title: 'Certidões de nascimento atualizadas (90 dias)', completed: true },
           { id: 'c2', title: 'Comprovantes de residência dos noivos', completed: true },
@@ -309,12 +333,12 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       websiteSettings: {
-        title: 'Casamento Matheus & Virginia',
-        storyText: 'Nos conhecemos em uma tarde fria e decidimos compartilhar a vida juntos.',
+        title: 'Casamento Alex & Taylor',
+        storyText: 'Nos conhecemos em um evento de trabalho e decidimos compartilhar a vida juntos.',
         dressCodeNotes: 'Traje Passeio Completo / Semi-Formal',
-        lodgingNotes: 'Indicação de hotéis parceiros em Campos do Jordão',
+        lodgingNotes: 'Indicação de hotéis parceiros na região',
         isPublished: true,
-        customSlug: 'matheus-virginia-2026',
+        customSlug: 'alex-taylor-demo',
       },
 
       // Auth Implementation
@@ -327,14 +351,16 @@ export const useAppStore = create<AppStoreState>()(
           return { success: true };
         }
 
+        if (!cleanEmail || !pass) {
+          return { success: false, error: 'Por favor, informe o e-mail e a senha.' };
+        }
+
         const users = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('nosso_users') || '[]') : [];
         let user = users.find((u: User) => u.email.toLowerCase() === cleanEmail);
 
         if (!user) {
-          // Reconhecimento de parceira (Virginia Larré)
-          const formattedName = cleanEmail === 'vlarre12@gmail.com'
-            ? 'Virginia Larré'
-            : cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+          // Cria usuário real limpo
+          const formattedName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 
           user = {
             id: `user-${Date.now()}`,
@@ -360,17 +386,34 @@ export const useAppStore = create<AppStoreState>()(
         // Se o workspace ativo for o de demonstração, cria/inicializa um workspace REAL limpo para o usuário
         const activeWs = get().workspaces.find((w) => w.id === get().activeWorkspaceId);
         if (!activeWs || activeWs.isDemoWorkspace || get().activeWorkspaceId === DEMO_WORKSPACE_ID) {
-          const partner1 = cleanEmail === 'vlarre12@gmail.com' ? 'Virginia' : validUser.name.split(' ')[0];
-          const partner2 = cleanEmail === 'vlarre12@gmail.com' ? 'Noivo' : 'Noiva';
-          get().createNewRealWorkspace(`Casamento de ${validUser.name}`, partner1, partner2);
+          const partner1Name = validUser.name.split(' ')[0] || 'Parceiro 1';
+          get().createNewRealWorkspace(`Casamento de ${validUser.name}`, partner1Name, 'Parceiro 2');
         }
 
         SupabaseService.signInUser(cleanEmail, pass);
         return { success: true };
       },
 
-      signup: (name, email, pass) => {
+      signup: (name, email, pass, confirmPass, acceptedTerms) => {
         const cleanEmail = email.trim().toLowerCase();
+
+        if (!name || !cleanEmail || !pass) {
+          return { success: false, error: 'Por favor, preencha todos os campos obrigatórios.' };
+        }
+
+        if (!acceptedTerms) {
+          return { success: false, error: 'É necessário aceitar os Termos de Uso e a Política de Privacidade para se cadastrar.' };
+        }
+
+        if (pass !== confirmPass) {
+          return { success: false, error: 'A confirmação de senha não confere com a senha digitada.' };
+        }
+
+        const passValidation = validateStrongPassword(pass);
+        if (!passValidation.valid) {
+          return { success: false, error: passValidation.message };
+        }
+
         const newUser: User = {
           id: `user-${Date.now()}`,
           name,
@@ -392,17 +435,32 @@ export const useAppStore = create<AppStoreState>()(
         });
 
         // Automatically create clean workspace for real user
-        get().createNewRealWorkspace(`Casamento de ${name}`, name.split(' ')[0] || 'Noivo(a) 1', 'Noivo(a) 2');
+        get().createNewRealWorkspace(`Casamento de ${name}`, name.split(' ')[0] || 'Parceiro 1', 'Parceiro 2');
         SupabaseService.signUpUser(cleanEmail, pass, name);
         return { success: true };
       },
 
-      logout: () => set({ currentUser: null, isAuthenticated: false }),
+      logout: () => {
+        set({ currentUser: null, isAuthenticated: false });
+      },
+
       verifyEmail: () => set((state) => ({
         currentUser: state.currentUser ? { ...state.currentUser, emailVerified: true } : null
       })),
-      updatePassword: () => {},
-      deleteAccount: () => set({ currentUser: null, isAuthenticated: false }),
+
+      updatePassword: (oldPass, newPass) => {
+        const passValidation = validateStrongPassword(newPass);
+        if (!passValidation.valid) {
+          return { success: false, error: passValidation.message };
+        }
+        return { success: true };
+      },
+
+      deleteAccount: (pass) => {
+        if (!pass) return { success: false, error: 'Confirme sua senha para excluir a conta.' };
+        set({ currentUser: null, isAuthenticated: false });
+        return { success: true };
+      },
 
       enterDemoMode: () => {
         set({
@@ -432,7 +490,7 @@ export const useAppStore = create<AppStoreState>()(
 
       createNewRealWorkspace: (weddingName, partner1, partner2) => {
         const newWsId = `ws-real-${Date.now()}`;
-        const userId = get().currentUser?.id || 'owner';
+        const userId = get().currentUser?.id || `user-${Date.now()}`;
 
         const newWorkspace: WeddingWorkspace = {
           id: newWsId,
@@ -469,7 +527,7 @@ export const useAppStore = create<AppStoreState>()(
           workspaceId: newWsId,
           partner1Name: partner1,
           partner2Name: partner2,
-          weddingDate: '2026-11-14',
+          weddingDate: '',
           weddingTime: '16:00',
           timezone: 'America/Sao_Paulo',
           city: '',
@@ -486,13 +544,28 @@ export const useAppStore = create<AppStoreState>()(
           status: 'onboarding',
         };
 
+        const emptyPalette: Palette = {
+          workspaceId: newWsId,
+          colors: [
+            { id: 'c1', name: 'Marsala', hex: '#8B263E', rgb: '139, 38, 62', role: 'principal', appliedTo: [] },
+            { id: 'c2', name: 'Rosa Antigo', hex: '#C48B9F', rgb: '196, 139, 159', role: 'secundaria', appliedTo: [] },
+            { id: 'c3', name: 'Grafite', hex: '#1E293B', rgb: '30, 41, 59', role: 'acento', appliedTo: [] },
+            { id: 'c4', name: 'Verde Sálvia', hex: '#5B7065', rgb: '91, 112, 101', role: 'neutra', appliedTo: [] },
+          ],
+          primaryTypography: 'Playfair Display',
+          secondaryTypography: 'Plus Jakarta Sans',
+        };
+
         set((state) => ({
-          workspaces: [...state.workspaces, newWorkspace],
+          workspaces: [...state.workspaces.filter((w) => w.id !== newWsId), newWorkspace],
           memberships: [...state.memberships, newMembership],
           activeWorkspaceId: newWsId,
           coupleProfile: emptyCoupleProfile,
+          palette: emptyPalette,
           guests: [],
+          households: [],
           tables: [],
+          seats: [],
           tasks: [],
           vendors: [],
           budgetItems: [],
@@ -503,7 +576,37 @@ export const useAppStore = create<AppStoreState>()(
           timeline: [],
           decorItems: [],
           risks: [],
+          gifts: [],
+          photoShots: [],
+          notifications: [],
+          activityLogs: [],
+          moodboard: [],
+          menuItems: [],
+          civilInfo: {
+            workspaceId: newWsId,
+            cartorioName: '',
+            cartorioCity: '',
+            cartorioState: '',
+            regimeDeBens: 'comunhao_parcial',
+            hasPactoAntenupcial: false,
+            processStatus: 'documentos_pendentes',
+            checklists: [
+              { id: 'c1', title: 'Certidões de nascimento atualizadas (90 dias)', completed: false },
+              { id: 'c2', title: 'Comprovantes de residência dos noivos', completed: false },
+              { id: 'c3', title: 'RG e CPF das 2 testemunhas', completed: false },
+            ],
+          },
+          websiteSettings: {
+            title: `Casamento ${partner1} & ${partner2}`,
+            storyText: '',
+            dressCodeNotes: 'Semi-Formal',
+            lodgingNotes: '',
+            isPublished: false,
+            customSlug: weddingName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          },
         }));
+
+        return newWsId;
       },
 
       deleteCurrentWorkspace: () => {
@@ -807,7 +910,7 @@ export const useAppStore = create<AppStoreState>()(
           timeline: [
             ...state.timeline,
             { ...itemData, id: `tl-${Date.now()}`, workspaceId: state.activeWorkspaceId },
-          ].sort((a, b) => a.time.localeCompare(b.time)),
+          ],
         })),
 
       addRiskItem: (riskData) =>
@@ -844,17 +947,18 @@ export const useAppStore = create<AppStoreState>()(
 
       getCostPerGuestMetrics: () => {
         const { coupleProfile, budgetItems } = get();
-        const estimated = coupleProfile.estimatedGuestsCount || 1;
-        const confirmed = get().getConfirmedGuestsCount() || estimated;
+        const estimated = coupleProfile.estimatedGuestsCount || 100;
+        const confirmed = get().getConfirmedGuestsCount();
 
-        const totalPlanned = coupleProfile.totalBudgetPlanned;
+        const totalPlanned = coupleProfile.totalBudgetPlanned || 0;
         const totalContracted = budgetItems.reduce((acc, i) => acc + (i.contractedCost || i.estimatedCost || 0), 0);
         const totalPaid = budgetItems.reduce((acc, i) => acc + i.paidAmount, 0);
 
         return {
-          plannedCostPerGuest: Math.round(totalPlanned / estimated),
-          contractedCostPerGuest: Math.round(totalContracted / confirmed),
-          paidCostPerGuest: Math.round(totalPaid / confirmed),
+          targetCostPerPerson: Math.round(totalPlanned / estimated),
+          contractedCostPerEstimatedGuest: Math.round(totalContracted / estimated),
+          projectedCostPerConfirmedGuest: confirmed > 0 ? Math.round(totalContracted / confirmed) : 0,
+          paidCostPerGuest: Math.round(totalPaid / estimated),
         };
       },
 
@@ -871,7 +975,7 @@ export const useAppStore = create<AppStoreState>()(
       },
     }),
     {
-      name: 'nosso_grande_dia_store_v2',
+      name: 'nosso_grande_dia_store_v3',
     }
   )
 );

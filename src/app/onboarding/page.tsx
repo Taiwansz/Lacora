@@ -13,7 +13,7 @@ export default function OnboardingPage() {
   const [formData, setFormData] = useState({
     partner1Name: coupleProfile.partner1Name || '',
     partner2Name: coupleProfile.partner2Name || '',
-    weddingDate: coupleProfile.weddingDate || '2026-11-14',
+    weddingDate: coupleProfile.weddingDate || '',
     weddingTime: coupleProfile.weddingTime || '16:00',
     city: coupleProfile.city || '',
     state: coupleProfile.state || '',
@@ -71,8 +71,9 @@ export default function OnboardingPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Nome do Noivo(a) 1</label>
+                <label htmlFor="ob-p1" className="block text-xs font-semibold text-charcoal mb-1">Nome do Noivo(a) 1 *</label>
                 <input
+                  id="ob-p1"
                   type="text"
                   required
                   value={formData.partner1Name}
@@ -82,8 +83,9 @@ export default function OnboardingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Nome do Noivo(a) 2</label>
+                <label htmlFor="ob-p2" className="block text-xs font-semibold text-charcoal mb-1">Nome do Noivo(a) 2 *</label>
                 <input
+                  id="ob-p2"
                   type="text"
                   required
                   value={formData.partner2Name}
@@ -95,8 +97,9 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-charcoal mb-1">Estilo do Casamento</label>
+              <label htmlFor="ob-style" className="block text-xs font-semibold text-charcoal mb-1">Estilo do Casamento</label>
               <input
+                id="ob-style"
                 type="text"
                 value={formData.style}
                 onChange={(e) => handleChange('style', e.target.value)}
@@ -111,8 +114,9 @@ export default function OnboardingPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Data do Casamento</label>
+                <label htmlFor="ob-date" className="block text-xs font-semibold text-charcoal mb-1">Data Prevista do Casamento</label>
                 <input
+                  id="ob-date"
                   type="date"
                   value={formData.weddingDate}
                   onChange={(e) => handleChange('weddingDate', e.target.value)}
@@ -120,8 +124,9 @@ export default function OnboardingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Horário Previsto</label>
+                <label htmlFor="ob-time" className="block text-xs font-semibold text-charcoal mb-1">Horário Previsto</label>
                 <input
+                  id="ob-time"
                   type="time"
                   value={formData.weddingTime}
                   onChange={(e) => handleChange('weddingTime', e.target.value)}
@@ -132,8 +137,9 @@ export default function OnboardingPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Cidade</label>
+                <label htmlFor="ob-city" className="block text-xs font-semibold text-charcoal mb-1">Cidade</label>
                 <input
+                  id="ob-city"
                   type="text"
                   value={formData.city}
                   onChange={(e) => handleChange('city', e.target.value)}
@@ -142,8 +148,9 @@ export default function OnboardingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Estado (UF)</label>
+                <label htmlFor="ob-state" className="block text-xs font-semibold text-charcoal mb-1">Estado (UF)</label>
                 <input
+                  id="ob-state"
                   type="text"
                   value={formData.state}
                   onChange={(e) => handleChange('state', e.target.value)}
@@ -159,8 +166,9 @@ export default function OnboardingPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Número Estimado de Convidados</label>
+                <label htmlFor="ob-guests" className="block text-xs font-semibold text-charcoal mb-1">Número Estimado de Convidados</label>
                 <input
+                  id="ob-guests"
                   type="number"
                   value={formData.estimatedGuestsCount}
                   onChange={(e) => handleChange('estimatedGuestsCount', Number(e.target.value))}
@@ -168,8 +176,9 @@ export default function OnboardingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Orçamento Teto Planejado (R$)</label>
+                <label htmlFor="ob-budget" className="block text-xs font-semibold text-charcoal mb-1">Orçamento Teto Planejado (R$)</label>
                 <input
+                  id="ob-budget"
                   type="number"
                   value={formData.totalBudgetPlanned}
                   onChange={(e) => handleChange('totalBudgetPlanned', Number(e.target.value))}
@@ -183,20 +192,22 @@ export default function OnboardingPage() {
         {step === 4 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-charcoal mb-1">Tradições Culturais ou Religiosas</label>
+              <label htmlFor="ob-traditions" className="block text-xs font-semibold text-charcoal mb-1">Tradições Culturais ou Religiosas</label>
               <textarea
+                id="ob-traditions"
                 value={formData.culturalTraditions}
                 onChange={(e) => handleChange('culturalTraditions', e.target.value)}
-                className="w-full text-xs p-3 border border-border rounded-xl outline-none h-20"
+                className="w-full text-xs p-3 border border-border rounded-xl outline-none h-20 focus:ring-2 focus:ring-marsala-500"
                 placeholder="Ex: Cerimônia das areias, quebra de taças..."
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-charcoal mb-1">Necessidades de Acessibilidade</label>
+              <label htmlFor="ob-accessibility" className="block text-xs font-semibold text-charcoal mb-1">Necessidades de Acessibilidade</label>
               <textarea
+                id="ob-accessibility"
                 value={formData.accessibilityNeeds}
                 onChange={(e) => handleChange('accessibilityNeeds', e.target.value)}
-                className="w-full text-xs p-3 border border-border rounded-xl outline-none h-20"
+                className="w-full text-xs p-3 border border-border rounded-xl outline-none h-20 focus:ring-2 focus:ring-marsala-500"
                 placeholder="Ex: Rampa no altar, mesa estofada para avó..."
               />
             </div>
@@ -207,6 +218,7 @@ export default function OnboardingPage() {
         <div className="flex items-center justify-between pt-6 border-t border-border">
           {step > 1 ? (
             <button
+              type="button"
               onClick={() => setStep(step - 1)}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 px-4 py-2 rounded-xl border border-border hover:bg-surface-muted"
             >
@@ -218,6 +230,7 @@ export default function OnboardingPage() {
 
           {step < 4 ? (
             <button
+              type="button"
               onClick={() => setStep(step + 1)}
               className="flex items-center gap-2 text-xs font-semibold text-white bg-marsala-500 px-6 py-2.5 rounded-xl shadow-card hover:bg-marsala-600"
             >
@@ -225,6 +238,7 @@ export default function OnboardingPage() {
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleFinish}
               className="flex items-center gap-2 text-xs font-bold text-white bg-emerald-600 px-6 py-2.5 rounded-xl shadow-card hover:bg-emerald-700"
             >

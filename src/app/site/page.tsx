@@ -3,13 +3,20 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
+import { formatDateLong } from '@/lib/utils';
 import { Globe, Eye, Copy, Heart, MapPin, Calendar, CheckCircle2, Gift } from 'lucide-react';
 
 export default function SitePage() {
-  const { coupleProfile, palette, gifts } = useAppStore();
+  const { coupleProfile, gifts } = useAppStore();
   const [copied, setCopied] = useState(false);
 
-  const publicUrl = `https://nossograndedia.app/site/${coupleProfile.partner1Name.toLowerCase()}-${coupleProfile.partner2Name.toLowerCase()}`;
+  const partner1 = coupleProfile.partner1Name || 'Parceiro 1';
+  const partner2 = coupleProfile.partner2Name || 'Parceiro 2';
+  const slug = coupleProfile.customSlug || `${partner1.toLowerCase()}-${partner2.toLowerCase()}`;
+  const dateText = coupleProfile.weddingDate ? formatDateLong(coupleProfile.weddingDate).toUpperCase() : 'DATA A DEFINIR';
+  const cityText = coupleProfile.city ? coupleProfile.city.toUpperCase() : 'CIDADE A DEFINIR';
+
+  const publicUrl = `https://nossograndedia.app/site/${slug}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(publicUrl);
@@ -36,14 +43,14 @@ export default function SitePage() {
         <div className="flex items-center gap-3">
           <button
             onClick={copyLink}
-            className="flex items-center gap-2 bg-surface-muted text-charcoal font-semibold text-xs px-4 py-2.5 rounded-xl border border-border hover:bg-rose-50"
+            className="flex items-center gap-2 bg-surface-muted text-charcoal font-semibold text-xs px-4 py-2.5 rounded-xl border border-border hover:bg-rose-50 transition-colors"
           >
             <Copy className="w-4 h-4" /> {copied ? 'Link Copiado!' : 'Copiar Link Público'}
           </button>
           <Link
-            href="/rsvp/token-demo-123"
+            href={`/rsvp/convite-exemplo`}
             target="_blank"
-            className="flex items-center gap-2 bg-marsala-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-card hover:bg-marsala-600"
+            className="flex items-center gap-2 bg-marsala-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-card hover:bg-marsala-600 transition-colors"
           >
             <Eye className="w-4 h-4" /> Visualizar Formulário RSVP
           </Link>
@@ -58,20 +65,20 @@ export default function SitePage() {
             Salvem esta Data
           </span>
           <h2 className="font-serif text-4xl font-bold mt-2">
-            {coupleProfile.partner1Name} & {coupleProfile.partner2Name}
+            {partner1} & {partner2}
           </h2>
           <p className="text-xs text-rose-100 mt-2 font-mono">
-            14 DE NOVEMBRO DE 2026 • CAMPOS DO JORDÃO - SP
+            {dateText} • {cityText}
           </p>
         </div>
 
         {/* Story Section */}
         <div className="p-8 space-y-6">
           <div className="max-w-2xl mx-auto text-center space-y-3">
-            <Heart className="w-8 h-8 text-marsala-500 mx-auto animate-pulse" />
+            <Heart className="w-8 h-8 text-marsala-500 mx-auto" />
             <h3 className="font-serif text-2xl font-bold text-charcoal">Nossa História de Amor</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              "Nos conhecemos na faculdade e, desde o primeiro café compartilhado em uma tarde fria, soubemos que estávamos construindo algo verdadeiramente especial..."
+              "Nos conhecemos e decidimos construir uma linda história juntos. É com enorme alegria que compartilhamos este momento especial com vocês..."
             </p>
           </div>
 
@@ -100,6 +107,9 @@ export default function SitePage() {
                   )}
                 </div>
               ))}
+              {gifts.length === 0 && (
+                <p className="text-xs text-slate-400 col-span-3 text-center py-4">Nenhum presente cadastrado na lista.</p>
+              )}
             </div>
           </div>
         </div>

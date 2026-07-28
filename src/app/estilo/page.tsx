@@ -2,12 +2,17 @@
 
 import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { generateSimplePDF } from '@/lib/utils';
-import { Palette as PaletteIcon, Image as ImageIcon, Download, Plus, ThumbsUp, Sparkles, Eye } from 'lucide-react';
+import { generateSimplePDF, formatDateLong } from '@/lib/utils';
+import { Palette as PaletteIcon, Image as ImageIcon, Download, Plus, ThumbsUp, Eye } from 'lucide-react';
 
 export default function EstiloPage() {
-  const { palette, moodboard, updatePaletteColor } = useAppStore();
+  const { palette, moodboard, updatePaletteColor, coupleProfile } = useAppStore();
   const [selectedPreview, setSelectedPreview] = useState<'convite' | 'site' | 'mesa' | 'buque' | 'traje'>('convite');
+
+  const partner1 = coupleProfile.partner1Name || 'Parceiro 1';
+  const partner2 = coupleProfile.partner2Name || 'Parceiro 2';
+  const dateFormatted = coupleProfile.weddingDate ? formatDateLong(coupleProfile.weddingDate).toUpperCase() : 'DATA A DEFINIR';
+  const cityFormatted = coupleProfile.city ? coupleProfile.city.toUpperCase() : 'CIDADE A DEFINIR';
 
   const primaryColor = palette.colors.find((c) => c.role === 'principal')?.hex || '#8B263E';
   const secondaryColor = palette.colors.find((c) => c.role === 'secundaria')?.hex || '#C48B9F';
@@ -59,7 +64,7 @@ export default function EstiloPage() {
                       ? 'bg-rose-100 text-marsala-500'
                       : color.role === 'proibida'
                       ? 'bg-rose-500 text-white'
-                      : 'bg-white text-slate-600'
+                      : 'bg-surface text-slate-600'
                   }`}
                 >
                   {color.role}
@@ -69,6 +74,8 @@ export default function EstiloPage() {
               {/* Color Box */}
               <div className="flex items-center gap-3">
                 <input
+                  id={`color-picker-${color.id}`}
+                  aria-label={`Cor HEX para ${color.name}`}
                   type="color"
                   value={color.hex}
                   onChange={(e) => updatePaletteColor(color.id, e.target.value)}
@@ -83,7 +90,7 @@ export default function EstiloPage() {
               {/* Applied to */}
               <div className="text-[11px] text-slate-600 border-t border-border/60 pt-2">
                 <span className="font-semibold block mb-1">Aplicações:</span>
-                <p className="text-[10px] text-slate-500">{color.appliedTo.join(' • ')}</p>
+                <p className="text-[10px] text-slate-500">{color.appliedTo.join(' • ') || 'Configurável'}</p>
               </div>
             </div>
           ))}
@@ -119,7 +126,7 @@ export default function EstiloPage() {
           </div>
         </div>
 
-        {/* Mock Live Preview Box */}
+        {/* Live Preview Box */}
         <div
           className="p-8 rounded-2xl border border-border text-center space-y-4 shadow-subtle transition-all duration-300"
           style={{ backgroundColor: selectedPreview === 'site' ? '#FAF8F5' : '#FFFFFF' }}
@@ -127,14 +134,14 @@ export default function EstiloPage() {
           {selectedPreview === 'convite' && (
             <div className="max-w-md mx-auto p-6 rounded-2xl border-2 border-dashed border-rose-200 bg-amber-50/20 shadow-floating space-y-3">
               <span className="font-serif text-xl font-bold block" style={{ color: primaryColor }}>
-                Matheus & Virginia
+                {partner1} & {partner2}
               </span>
               <p className="text-xs italic" style={{ color: secondaryColor }}>
                 Convidam com imensa alegria para celebrar a união de suas vidas
               </p>
               <div className="w-16 h-0.5 mx-auto my-2" style={{ backgroundColor: primaryColor }} />
               <p className="text-xs font-mono font-bold" style={{ color: accentColor }}>
-                14 DE NOVEMBRO DE 2026 • CAMPOS DO JORDÃO - SP
+                {dateFormatted} • {cityFormatted}
               </p>
             </div>
           )}
@@ -142,7 +149,7 @@ export default function EstiloPage() {
           {selectedPreview === 'site' && (
             <div className="max-w-lg mx-auto p-6 rounded-2xl border border-border bg-white shadow-card space-y-3">
               <div className="w-full h-32 rounded-xl marsala-gradient flex items-center justify-center text-white font-serif text-2xl font-bold">
-                Matheus & Virginia
+                {partner1} & {partner2}
               </div>
               <p className="text-xs text-slate-600">
                 Sejam bem-vindos ao nosso site de casamento! Confirme seu RSVP e veja a lista de presentes.

@@ -3,21 +3,18 @@
 import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatBRL, exportToCSV } from '@/lib/utils';
-import { DollarSign, Plus, Download, TrendingUp, AlertTriangle, CheckCircle2, PieChart } from 'lucide-react';
+import { DollarSign, Plus, Download, TrendingUp, Info, X } from 'lucide-react';
 
 export default function OrcamentoPage() {
   const {
     coupleProfile,
     budgetItems,
-    payments,
     addBudgetItem,
-    markPaymentAsPaid,
     getConfirmedGuestsCount,
     getCostPerGuestMetrics
   } = useAppStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<string>('todas');
 
   const [newItem, setNewItem] = useState({
     categoryId: 'c1',
@@ -30,8 +27,14 @@ export default function OrcamentoPage() {
     payerName: 'Casal',
   });
 
-  const confirmedGuests = getConfirmedGuestsCount() || coupleProfile.estimatedGuestsCount || 1;
-  const { plannedCostPerGuest, contractedCostPerGuest, paidCostPerGuest } = getCostPerGuestMetrics();
+  const estimatedGuests = coupleProfile.estimatedGuestsCount || 100;
+  const confirmedGuests = getConfirmedGuestsCount();
+  const {
+    targetCostPerPerson,
+    contractedCostPerEstimatedGuest,
+    projectedCostPerConfirmedGuest,
+    paidCostPerGuest
+  } = getCostPerGuestMetrics();
 
   const totalPlanned = coupleProfile.totalBudgetPlanned;
   const totalContracted = budgetItems.reduce((acc, i) => acc + (i.contractedCost || i.estimatedCost || 0), 0);
@@ -44,7 +47,7 @@ export default function OrcamentoPage() {
       Estimado: item.estimatedCost,
       Contractado: item.contractedCost,
       Pago: item.paidAmount,
-      Custo_Por_Convidado: Math.round(item.contractedCost / confirmedGuests),
+      Custo_Por_Convidado_Estimado: Math.round(item.contractedCost / estimatedGuests),
       Pagador: item.payerName,
     }));
     exportToCSV('orcamento_nosso_grande_dia', data);
@@ -78,13 +81,13 @@ export default function OrcamentoPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 bg-surface-muted text-charcoal rounded-xl border border-border hover:bg-rose-50"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 bg-surface-muted text-charcoal rounded-xl border border-border hover:bg-rose-50 transition-colors"
           >
-            <Download className="w-4 h-4" /> CSV
+            <Download className="w-4 h-4" /> Exportar CSV
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-marsala-500 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-card hover:bg-marsala-600"
+            className="flex items-center gap-2 bg-marsala-500 hover:bg-marsala-600 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-card transition-colors"
           >
             <Plus className="w-4 h-4" /> Novo Item Financeiro
           </button>
@@ -114,9 +117,41 @@ export default function OrcamentoPage() {
         </div>
 
         <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
-          <span className="text-xs font-semibold text-slate-500 block">Custo por Convidado</span>
-          <span className="font-serif text-2xl font-bold text-indigo-700 block mt-1">{formatBRL(contractedCostPerGuest)}</span>
-          <span className="text-[11px] text-slate-400 mt-1 block">Baseado em {confirmedGuests} convidados</span>
+          <span className="text-xs font-semibold text-slate-500 block">Custo Contratado / Convidado Previsto</span>
+          <span className="font-serif text-2xl font-bold text-indigo-700 block mt-1">{formatBRL(contractedCostPerEstimatedGuest)}</span>
+          <span className="text-[11px] text-slate-400 mt-1 block">Baseado em {estimatedGuests} convidados previstos</span>
+        </div>
+      </div>
+
+      {/* Detailed Cost Breakdown Box */}
+      <div className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-4">
+        <h2 className="font-serif text-base font-bold text-charcoal flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-marsala-500" />
+          Fórmulas & Métricas do Custo por Convidado
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div className="p-4 bg-surface-muted rounded-2xl border border-border">
+            <span className="font-semibold text-slate-500 block">Teto por Convidado</span>
+            <span className="font-serif text-lg font-bold text-charcoal block mt-1">{formatBRL(targetCostPerPerson)}</span>
+            <p className="text-[10px] text-slate-400 mt-1">Orçamento planejado ÷ {estimatedGuests} convidados previstos.</p>
+          </div>
+          <div className="p-4 bg-surface-muted rounded-2xl border border-border">
+            <span className="font-semibold text-slate-500 block">Contratado / Convidado Previsto</span>
+            <span className="font-serif text-lg font-bold text-emerald-600 block mt-1">{formatBRL(contractedCostPerEstimatedGuest)}</span>
+            <p className="text-[10px] text-slate-400 mt-1">Total contratado ÷ {estimatedGuests} convidados previstos no contrato.</p>
+          </div>
+          <div className="p-4 bg-surface-muted rounded-2xl border border-border">
+            <span className="font-semibold text-slate-500 block">Projetado / Convidado Confirmado</span>
+            <span className="font-serif text-lg font-bold text-indigo-600 block mt-1">
+              {confirmedGuests > 0 ? formatBRL(projectedCostPerConfirmedGuest) : 'Sem RSVPs'}
+            </span>
+            <p className="text-[10px] text-slate-400 mt-1">Total contratado ÷ {confirmedGuests} confirmações atuais.</p>
+          </div>
+          <div className="p-4 bg-surface-muted rounded-2xl border border-border">
+            <span className="font-semibold text-slate-500 block">Pago / Convidado</span>
+            <span className="font-serif text-lg font-bold text-purple-600 block mt-1">{formatBRL(paidCostPerGuest)}</span>
+            <p className="text-[10px] text-slate-400 mt-1">Total já quitado ÷ {estimatedGuests} convidados previstos.</p>
+          </div>
         </div>
       </div>
 
@@ -133,13 +168,13 @@ export default function OrcamentoPage() {
                 <th className="p-4">Custo Estimado</th>
                 <th className="p-4">Custo Contratado</th>
                 <th className="p-4">Valor Pago</th>
-                <th className="p-4">Custo / Convidado</th>
+                <th className="p-4">Custo / Convidado Previsto</th>
                 <th className="p-4 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {budgetItems.map((item) => {
-                const itemCostPerGuest = Math.round((item.contractedCost || item.estimatedCost) / confirmedGuests);
+                const itemCostPerGuest = Math.round((item.contractedCost || item.estimatedCost) / estimatedGuests);
                 const isFullyPaid = item.paidAmount >= item.contractedCost && item.contractedCost > 0;
                 return (
                   <tr key={item.id} className="hover:bg-surface-muted/40 transition-colors">
@@ -164,6 +199,13 @@ export default function OrcamentoPage() {
                   </tr>
                 );
               })}
+              {budgetItems.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                    Nenhum item orçamentário cadastrado ainda.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -171,53 +213,62 @@ export default function OrcamentoPage() {
 
       {/* Modal Add Item */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-budget-title" className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
           <form onSubmit={handleCreate} className="bg-surface p-6 rounded-3xl border border-border max-w-md w-full shadow-floating space-y-4">
-            <h3 className="font-serif text-lg font-bold text-charcoal">Novo Item de Orçamento</h3>
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <h3 id="modal-budget-title" className="font-serif text-lg font-bold text-charcoal">Novo Item de Orçamento</h3>
+              <button type="button" onClick={() => setShowAddModal(false)} className="p-1 text-slate-400 hover:text-charcoal">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
             <div>
-              <label className="block text-xs font-semibold text-charcoal mb-1">Descrição</label>
+              <label htmlFor="bi-description" className="block text-xs font-semibold text-charcoal mb-1">Descrição *</label>
               <input
+                id="bi-description"
                 type="text"
                 required
                 value={newItem.description}
                 onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
+                className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
                 placeholder="Ex: Cerimonial & Assessoria"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Custo Estimado (R$)</label>
+                <label htmlFor="bi-estimated" className="block text-xs font-semibold text-charcoal mb-1">Custo Estimado (R$) *</label>
                 <input
+                  id="bi-estimated"
                   type="number"
                   required
                   value={newItem.estimatedCost}
                   onChange={(e) => setNewItem({ ...newItem, estimatedCost: Number(e.target.value) })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Custo Contratado (R$)</label>
+                <label htmlFor="bi-contracted" className="block text-xs font-semibold text-charcoal mb-1">Custo Contratado (R$) *</label>
                 <input
+                  id="bi-contracted"
                   type="number"
                   required
                   value={newItem.contractedCost}
                   onChange={(e) => setNewItem({ ...newItem, contractedCost: Number(e.target.value) })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-500 rounded-xl border border-border"
+                className="px-4 py-2 text-xs font-semibold text-slate-500 rounded-xl border border-border hover:bg-surface-muted"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-xs font-bold text-white bg-marsala-500 rounded-xl shadow-card"
+                className="px-5 py-2 text-xs font-bold text-white bg-marsala-500 hover:bg-marsala-600 rounded-xl shadow-card"
               >
                 Salvar Item
               </button>

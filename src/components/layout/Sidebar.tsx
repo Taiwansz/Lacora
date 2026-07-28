@@ -24,13 +24,13 @@ import {
   Clock,
   Globe,
   Settings,
-  Shield,
+  Lock,
   Bell,
   CreditCard,
-  Lock,
   History,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Search
 } from 'lucide-react';
 
 interface NavGroup {
@@ -44,28 +44,28 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: 'Visão Geral', href: '/dashboard', icon: LayoutDashboard },
       { label: 'Onboarding', href: '/onboarding', icon: Compass },
-      { label: 'Checklist', href: '/checklist', icon: CheckSquare },
+      { label: 'Checklist de Tarefas', href: '/checklist', icon: CheckSquare },
       { label: 'Contingência & Riscos', href: '/contingencia', icon: ShieldAlert },
     ],
   },
   {
-    title: 'Pessoas',
+    title: 'Pessoas & Convidados',
     items: [
-      { label: 'CRM de Convidados', href: '/convidados', icon: Users },
-      { label: 'Equipe & Permissões', href: '/equipe', icon: UserCheck },
+      { label: 'Lista de Convidados', href: '/convidados', icon: Users },
+      { label: 'Equipe & Colaboradores', href: '/equipe', icon: UserCheck },
       { label: 'Lua de Mel & Pós', href: '/pos-casamento', icon: Plane },
     ],
   },
   {
-    title: 'Financeiro',
+    title: 'Financeiro & Contratos',
     items: [
-      { label: 'Orçamento', href: '/orcamento', icon: DollarSign },
+      { label: 'Orçamento & Custos', href: '/orcamento', icon: DollarSign },
       { label: 'Fornecedores', href: '/fornecedores', icon: Briefcase },
       { label: 'Documentos & Contratos', href: '/documentos', icon: FileText },
     ],
   },
   {
-    title: 'Estilo',
+    title: 'Estilo & Design',
     items: [
       { label: 'Identidade Visual', href: '/estilo', icon: Palette },
       { label: 'Vestuário & Beleza', href: '/vestuario', icon: Shirt },
@@ -73,23 +73,23 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Evento',
+    title: 'Dia do Evento',
     items: [
       { label: 'Locais & Espaços', href: '/locais', icon: MapPin },
       { label: 'Cerimônia & Recepção', href: '/evento', icon: Utensils },
-      { label: 'Mapa de Mesas', href: '/mesas', icon: Grid },
-      { label: 'Cronograma (Dia H)', href: '/dia-h', icon: Clock },
+      { label: 'Planta de Mesas', href: '/mesas', icon: Grid },
+      { label: 'Cronograma Dia H', href: '/dia-h', icon: Clock },
     ],
   },
   {
-    title: 'Site & Mídia',
+    title: 'Site Público & Divulgação',
     items: [
       { label: 'Site do Casal & RSVP', href: '/site', icon: Globe },
       { label: 'Casamento Civil', href: '/civil', icon: FileText },
     ],
   },
   {
-    title: 'Configurações',
+    title: 'Configurações & Segurança',
     items: [
       { label: 'Minha Conta', href: '/conta', icon: Settings },
       { label: 'Configurações', href: '/configuracoes', icon: Settings },
@@ -104,6 +104,7 @@ export const navGroups: NavGroup[] = [
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [searchTerm, setSearchTerm] = useState('');
 
   const toggleGroup = (title: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -113,24 +114,49 @@ export const Sidebar: React.FC = () => {
     <aside className="w-64 bg-surface border-r border-border min-h-screen hidden md:flex flex-col no-print shrink-0">
       {/* Brand Header */}
       <div className="p-6 border-b border-border flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl marsala-gradient flex items-center justify-center text-white font-serif font-bold text-sm shadow-subtle">
-          ND
-        </div>
-        <div>
-          <span className="font-serif font-bold text-base text-charcoal block leading-none">
-            Nosso Grande Dia
-          </span>
-          <span className="text-[10px] text-slate-400 font-medium block mt-1">
-            Gestão de Casamentos
-          </span>
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl marsala-gradient flex items-center justify-center text-white font-serif font-bold text-sm shadow-subtle">
+            ND
+          </div>
+          <div>
+            <span className="font-serif font-bold text-base text-charcoal block leading-none">
+              Nosso Grande Dia
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium block mt-1">
+              Gestão de Casamentos
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Contextual Search Bar */}
+      <div className="px-4 pt-4">
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            id="sidebar-search"
+            aria-label="Buscar menu ou módulo"
+            type="text"
+            placeholder="Buscar módulo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-muted border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
+          />
         </div>
       </div>
 
       {/* Grouped Navigation Accordion */}
-      <nav className="flex-1 p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-120px)]">
+      <nav className="flex-1 p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-160px)]">
         {navGroups.map((group) => {
           const isCollapsed = collapsedGroups[group.title];
-          const hasActiveChild = group.items.some((item) => pathname === item.href);
+
+          const filteredItems = searchTerm.trim()
+            ? group.items.filter((item) =>
+                item.label.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            : group.items;
+
+          if (searchTerm.trim() && filteredItems.length === 0) return null;
 
           return (
             <div key={group.title} className="space-y-1">
@@ -139,12 +165,16 @@ export const Sidebar: React.FC = () => {
                 className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-charcoal transition-colors"
               >
                 <span>{group.title}</span>
-                {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {isCollapsed && !searchTerm.trim() ? (
+                  <ChevronRight className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
               </button>
 
-              {!isCollapsed && (
+              {(!isCollapsed || !!searchTerm.trim()) && (
                 <div className="space-y-0.5">
-                  {group.items.map((item) => {
+                  {filteredItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
                     return (
@@ -172,7 +202,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Footer */}
       <div className="p-4 border-t border-border text-center text-[10px] text-slate-400">
-        Nosso Grande Dia &copy; 2026
+        Nosso Grande Dia &copy; {new Date().getFullYear()}
       </div>
     </aside>
   );

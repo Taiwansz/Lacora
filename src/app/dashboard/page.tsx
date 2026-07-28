@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { formatBRL, getDaysCountdown } from '@/lib/utils';
@@ -10,16 +10,22 @@ import {
   Users,
   DollarSign,
   Briefcase,
-  AlertTriangle,
   Clock,
   ChevronRight,
   TrendingUp,
   Wine,
   Shield,
-  Compass
+  Compass,
+  Info
 } from 'lucide-react';
 
 export default function DashboardPage() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const {
     coupleProfile,
     tasks,
@@ -40,18 +46,24 @@ export default function DashboardPage() {
   const activeWs = workspaces.find((w) => w.id === activeWorkspaceId);
   const isDemo = activeWs?.isDemoWorkspace;
 
-  const { days, isPast } = getDaysCountdown(coupleProfile.weddingDate);
+  const countdown = getDaysCountdown(coupleProfile.weddingDate);
+  const days = countdown.days;
+  const isPast = countdown.isPast;
+
   const confirmedGuests = getConfirmedGuestsCount();
-  const { plannedCostPerGuest, contractedCostPerGuest } = getCostPerGuestMetrics();
+  const {
+    targetCostPerPerson,
+    contractedCostPerEstimatedGuest,
+    projectedCostPerConfirmedGuest,
+    paidCostPerGuest
+  } = getCostPerGuestMetrics();
+
   const buffetEstimates = getBuffetEstimates();
 
   const totalBudgetSpent = budgetItems.reduce((acc, item) => acc + (item.contractedCost || item.estimatedCost || 0), 0);
   const totalPaid = budgetItems.reduce((acc, item) => acc + item.paidAmount, 0);
-  const totalPending = totalBudgetSpent - totalPaid;
-  const remainingBudget = coupleProfile.totalBudgetPlanned - totalBudgetSpent;
 
   const urgentTasks = tasks.filter((t) => t.status !== 'concluida' && t.priority === 'urgente');
-  const upcomingPayments = payments.filter((p) => p.status === 'pendente');
 
   // Role Restriction Message if Vendor
   if (currentRole === 'fornecedor') {
@@ -73,10 +85,10 @@ export default function DashboardPage() {
         <Heart className="w-10 h-10 text-marsala-500 mx-auto" />
         <h2 className="font-serif text-xl font-bold text-charcoal">Área do Convidado</h2>
         <p className="text-xs text-slate-600">
-          Bem-vindo ao espaço de {coupleProfile.partner1Name} & {coupleProfile.partner2Name}. Confirme sua presença no RSVP online.
+          Bem-vindo ao espaço de {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}. Confirme sua presença no RSVP online.
         </p>
         <Link
-          href={`/site`}
+          href="/site"
           className="inline-block px-6 py-2.5 bg-marsala-500 text-white font-bold text-xs rounded-xl shadow-card hover:bg-marsala-600"
         >
           Acessar Site do Casal & RSVP
@@ -96,7 +108,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-amber-700 shrink-0" />
             <span>
-              <strong>Modo de Demonstração (Matheus & Virginia):</strong> Este é um workspace descartável de teste com dados simulados.
+              <strong>Modo de Demonstração Fictício:</strong> Este é um workspace descartável de teste com dados modelo isolados.
             </span>
           </div>
           <Link href="/onboarding" className="font-bold text-amber-800 hover:underline shrink-0">
@@ -113,21 +125,21 @@ export default function DashboardPage() {
               {coupleProfile.style || 'Estilo do Casamento'}
             </span>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
-              {coupleProfile.partner1Name} & {coupleProfile.partner2Name}
+              {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}
             </h1>
             <p className="text-xs sm:text-sm text-rose-100 mt-2 max-w-xl">
               Plataforma de gestão integrada de casamentos com sincronização em tempo real entre convidados, orçamento e cronograma.
             </p>
           </div>
 
-          {/* Countdown Widget */}
+          {/* Countdown Widget with Hydration Safety */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/20 text-center min-w-[200px] shrink-0">
             <span className="text-[11px] uppercase tracking-wider text-rose-200 block font-semibold">
               Contagem Regressiva
             </span>
             <div className="flex items-baseline justify-center gap-2 mt-1">
               <span className="font-serif text-4xl sm:text-5xl font-bold text-white">
-                {isPast ? 0 : days}
+                {!isMounted ? '...' : isPast ? 0 : days}
               </span>
               <span className="text-xs font-medium text-rose-200">dias</span>
             </div>
@@ -196,20 +208,25 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Card 3: Cost per Guest */}
+        {/* Card 3: Cost per Guest (Corrected Logic) */}
         <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Custo por Convidado</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-semibold text-slate-500">Custo Previsto / Convidado</span>
+              <div title="Custo total contratado dividido pela lista total de convidados previstos." className="cursor-help">
+                <Info className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+            </div>
             <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
             <span className="font-serif text-2xl font-bold text-charcoal block">
-              {formatBRL(contractedCostPerGuest)}
+              {formatBRL(contractedCostPerEstimatedGuest)}
             </span>
             <span className="text-[11px] text-slate-400 mt-1 block">
-              Planejado: {formatBRL(plannedCostPerGuest)} / pessoa
+              Teto: {formatBRL(targetCostPerPerson)} / pessoa
             </span>
           </div>
         </div>
@@ -233,6 +250,38 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Detailed Cost per Guest Metrics Breakdown */}
+      <div className="bg-surface p-6 rounded-2xl border border-border shadow-card space-y-4">
+        <h2 className="font-serif text-base font-bold text-charcoal flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-marsala-500" />
+          Análise Detalhada do Custo por Convidado
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div className="p-4 bg-surface-muted rounded-xl border border-border">
+            <span className="font-semibold text-slate-500 block">1. Orçamento Teto por Convidado</span>
+            <span className="font-serif text-lg font-bold text-charcoal block mt-1">{formatBRL(targetCostPerPerson)}</span>
+            <p className="text-[10px] text-slate-400 mt-1">Orçamento total planejado ÷ convidados previstos ({coupleProfile.estimatedGuestsCount}).</p>
+          </div>
+          <div className="p-4 bg-surface-muted rounded-xl border border-border">
+            <span className="font-semibold text-slate-500 block">2. Custo Contratado / Convidado Previsto</span>
+            <span className="font-serif text-lg font-bold text-emerald-600 block mt-1">{formatBRL(contractedCostPerEstimatedGuest)}</span>
+            <p className="text-[10px] text-slate-400 mt-1">Valor contratado acumulado ÷ convidados previstos ({coupleProfile.estimatedGuestsCount}).</p>
+          </div>
+          <div className="p-4 bg-surface-muted rounded-xl border border-border">
+            <span className="font-semibold text-slate-500 block">3. Custo Projetado / Convidado Confirmado</span>
+            <span className="font-serif text-lg font-bold text-indigo-600 block mt-1">
+              {confirmedGuests > 0 ? formatBRL(projectedCostPerConfirmedGuest) : 'Pendente RSVPs'}
+            </span>
+            <p className="text-[10px] text-slate-400 mt-1">Total contratado ÷ confirmações efetuadas ({confirmedGuests} confirmados).</p>
+          </div>
+          <div className="p-4 bg-surface-muted rounded-xl border border-border">
+            <span className="font-semibold text-slate-500 block">4. Efetivamente Pago / Convidado</span>
+            <span className="font-serif text-lg font-bold text-purple-600 block mt-1">{formatBRL(paidCostPerGuest)}</span>
+            <p className="text-[10px] text-slate-400 mt-1">Total já pago ÷ convidados previstos ({coupleProfile.estimatedGuestsCount}).</p>
+          </div>
+        </div>
+      </div>
+
       {/* Buffet & Drinks Impact */}
       <div className="bg-surface p-6 rounded-2xl border border-border shadow-card">
         <div className="flex items-center justify-between mb-4">
@@ -246,7 +295,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <Link href="/convidados" className="text-xs font-semibold text-marsala-500 hover:underline flex items-center gap-1">
-            CRM Convidados <ChevronRight className="w-3.5 h-3.5" />
+            Lista de Convidados <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Vendor, VendorStatus } from '@/types';
-import { Briefcase, Plus, Star, Phone, Mail, MapPin, CheckCircle2, ChevronRight, AlertCircle, Shield } from 'lucide-react';
+import { Briefcase, Plus, Star, Phone, Mail, MapPin, CheckCircle2, ChevronRight, AlertCircle, Shield, X } from 'lucide-react';
 
 export default function FornecedoresPage() {
   const { vendors, addVendor, updateVendorStatus } = useAppStore();
@@ -45,18 +45,18 @@ export default function FornecedoresPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface p-6 rounded-3xl border border-border shadow-subtle">
         <div>
           <span className="text-xs font-semibold text-rose-500 uppercase tracking-wider block">
-            CRM & Pipeline de Fornecedores
+            Pipeline de Fornecedores
           </span>
           <h1 className="font-serif text-2xl font-bold text-charcoal mt-1">
             Funil de Negociação, Cotações & Fichas Técnicas
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Acompanhe propostas lado a lado, contatos de emergência e transições automáticas de status.
+            Acompanhe propostas lado a lado, contatos de emergência e transições de status.
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-marsala-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-card hover:bg-marsala-600"
+          className="flex items-center gap-2 bg-marsala-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-card hover:bg-marsala-600 transition-colors"
         >
           <Plus className="w-4 h-4" /> Cadastrar Fornecedor
         </button>
@@ -102,6 +102,7 @@ export default function FornecedoresPage() {
 
                     <div className="pt-2 border-t border-border flex items-center justify-between">
                       <select
+                        aria-label={`Alterar status do fornecedor ${vendor.tradeName}`}
                         value={vendor.status}
                         onChange={(e) => updateVendorStatus(vendor.id, e.target.value as VendorStatus)}
                         className="text-[10px] font-bold text-marsala-500 bg-transparent border-none focus:ring-0 cursor-pointer"
@@ -115,6 +116,10 @@ export default function FornecedoresPage() {
                     </div>
                   </div>
                 ))}
+
+                {colVendors.length === 0 && (
+                  <p className="text-[11px] text-slate-400 text-center py-4">Nenhum fornecedor</p>
+                )}
               </div>
             </div>
           );
@@ -134,75 +139,88 @@ export default function FornecedoresPage() {
 
       {/* Modal Add Vendor */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-vendor-title" className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
           <form onSubmit={handleCreate} className="bg-surface p-6 rounded-3xl border border-border max-w-md w-full shadow-floating space-y-4">
-            <h3 className="font-serif text-lg font-bold text-charcoal">Cadastrar Fornecedor</h3>
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <h3 id="modal-vendor-title" className="font-serif text-lg font-bold text-charcoal">Cadastrar Fornecedor</h3>
+              <button type="button" onClick={() => setShowModal(false)} className="p-1 text-slate-400 hover:text-charcoal">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
             <div>
-              <label className="block text-xs font-semibold text-charcoal mb-1">Nome Comercial / Fantasia</label>
+              <label htmlFor="vd-tradename" className="block text-xs font-semibold text-charcoal mb-1">Nome Comercial / Fantasia *</label>
               <input
+                id="vd-tradename"
                 type="text"
                 required
                 value={newVendor.tradeName}
                 onChange={(e) => setNewVendor({ ...newVendor, tradeName: e.target.value })}
-                className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
-                placeholder="Ex: Quinta das Flores Eventos"
+                className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
+                placeholder="Ex: Espaço Celebração & Festas"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Categoria</label>
+                <label htmlFor="vd-category" className="block text-xs font-semibold text-charcoal mb-1">Categoria *</label>
                 <input
+                  id="vd-category"
                   type="text"
                   required
                   value={newVendor.category}
                   onChange={(e) => setNewVendor({ ...newVendor, category: e.target.value })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Pessoa de Contato</label>
+                <label htmlFor="vd-contact" className="block text-xs font-semibold text-charcoal mb-1">Pessoa de Contato *</label>
                 <input
+                  id="vd-contact"
                   type="text"
                   required
                   value={newVendor.contactPerson}
                   onChange={(e) => setNewVendor({ ...newVendor, contactPerson: e.target.value })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">Telefone / WhatsApp</label>
+                <label htmlFor="vd-phone" className="block text-xs font-semibold text-charcoal mb-1">Telefone / WhatsApp *</label>
                 <input
+                  id="vd-phone"
                   type="text"
                   required
                   value={newVendor.phone}
                   onChange={(e) => setNewVendor({ ...newVendor, phone: e.target.value })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
+                  placeholder="(11) 99999-0000"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-charcoal mb-1">E-mail</label>
+                <label htmlFor="vd-email" className="block text-xs font-semibold text-charcoal mb-1">E-mail *</label>
                 <input
+                  id="vd-email"
                   type="email"
                   required
                   value={newVendor.email}
                   onChange={(e) => setNewVendor({ ...newVendor, email: e.target.value })}
-                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none"
+                  className="w-full text-xs p-2.5 border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
+                  placeholder="contato@exemplo.example"
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-500 rounded-xl border border-border"
+                className="px-4 py-2 text-xs font-semibold text-slate-500 rounded-xl border border-border hover:bg-surface-muted"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-xs font-bold text-white bg-marsala-500 rounded-xl shadow-card"
+                className="px-5 py-2 text-xs font-bold text-white bg-marsala-500 hover:bg-marsala-600 rounded-xl shadow-card"
               >
                 Salvar Fornecedor
               </button>

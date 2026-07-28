@@ -50,11 +50,20 @@ export const MobileNav: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end no-print">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu de Navegação Mobile"
+          className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end no-print"
+        >
           <div className="w-4/5 max-w-xs bg-surface h-full p-5 overflow-y-auto flex flex-col shadow-floating space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <span className="font-serif font-bold text-base text-charcoal">Menu Completo</span>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-slate-500">
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1 text-slate-500 hover:text-charcoal"
+                aria-label="Fechar menu"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>

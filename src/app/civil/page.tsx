@@ -1,9 +1,12 @@
 'use client';
 
 import React from 'react';
-import { FileCheck, AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
+import { FileCheck, AlertCircle, CheckCircle2, ShieldCheck, Scale, ExternalLink } from 'lucide-react';
 
 export default function CivilPage() {
+  const { civilInfo, updateCivilChecklist } = useAppStore();
+
   return (
     <div className="space-y-8">
       {/* Header Banner */}
@@ -21,6 +24,63 @@ export default function CivilPage() {
         </div>
       </div>
 
+      {/* Official Disclaimer & Source Note */}
+      <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs text-amber-900 space-y-1">
+        <div className="flex items-center gap-2 font-bold">
+          <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+          <span>Aviso Legal & Jurisdição (Última Revisão: Julho/2026)</span>
+        </div>
+        <p className="text-[11px] leading-relaxed">
+          As exigências documentais e prazos cartorários variam conforme a legislação do estado e o município do Cartório de Registro Civil. As informações exibidas nesta plataforma possuem caráter orientativo. Para confirmação oficial, consulte o portal da{' '}
+          <a
+            href="https://www.arpenbrasil.org.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold underline text-amber-950 inline-flex items-center gap-0.5"
+          >
+            ARPEN Brasil <ExternalLink className="w-3 h-3" />
+          </a>{' '}
+          ou o Cartório de sua região.
+        </p>
+      </div>
+
+      {/* Regime de Bens Explanation */}
+      <div className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-4">
+        <h2 className="font-serif text-lg font-bold text-charcoal flex items-center gap-2">
+          <Scale className="w-5 h-5 text-marsala-500" />
+          Regimes de Bens no Código Civil Brasileiro
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div className="p-4 bg-surface-muted rounded-2xl border border-border space-y-1">
+            <span className="font-bold text-charcoal block">Comunhão Parcial de Bens (Padrão)</span>
+            <p className="text-slate-600 text-[11px]">
+              Bens adquiridos antes do casamento permanecem individuais. Bens adquiridos onerosamente durante o casamento pertencem a ambos os cônjuges.
+            </p>
+          </div>
+
+          <div className="p-4 bg-surface-muted rounded-2xl border border-border space-y-1">
+            <span className="font-bold text-charcoal block">Separação Total de Bens</span>
+            <p className="text-slate-600 text-[11px]">
+              Todos os bens presentes e futuros permanecem no patrimônio exclusivo de cada cônjuge (exige Pacto Antenupcial por Escritura Pública).
+            </p>
+          </div>
+
+          <div className="p-4 bg-surface-muted rounded-2xl border border-border space-y-1">
+            <span className="font-bold text-charcoal block">Comunhão Universal de Bens</span>
+            <p className="text-slate-600 text-[11px]">
+              Todos os bens presentes e futuros de ambos os cônjuges passam a integrar um patrimônio comum (exige Pacto Antenupcial).
+            </p>
+          </div>
+
+          <div className="p-4 bg-surface-muted rounded-2xl border border-border space-y-1">
+            <span className="font-bold text-charcoal block">Participação Final nos Aquestos</span>
+            <p className="text-slate-600 text-[11px]">
+              Cada cônjuge mantém seu patrimônio próprio durante o casamento, e na dissolução apuram-se os bens adquiridos para divisão.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Cartório Checklist Box */}
       <div className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-4">
         <h2 className="font-serif text-lg font-bold text-charcoal flex items-center gap-2">
@@ -28,22 +88,24 @@ export default function CivilPage() {
           Documentos Obrigatórios para Entrada na Habilitação
         </h2>
         <div className="space-y-3 text-xs text-slate-700">
-          <div className="p-3 bg-surface-muted rounded-xl flex items-center gap-3">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Certidão de Nascimento atualizada em até 90 dias (ou Certidão de Casamento com averbação de divórcio)</span>
-          </div>
-          <div className="p-3 bg-surface-muted rounded-xl flex items-center gap-3">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span> Documento de Identidade oficial (RG / CNH) e CPF de ambos os noivos</span>
-          </div>
-          <div className="p-3 bg-surface-muted rounded-xl flex items-center gap-3">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span> Comprovante de residência atualizado do casal</span>
-          </div>
-          <div className="p-3 bg-surface-muted rounded-xl flex items-center gap-3">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span> Dados e RG de 2 testemunhas maiores de 18 anos</span>
-          </div>
+          {civilInfo.checklists.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => updateCivilChecklist(item.id, !item.completed)}
+              className="p-3 bg-surface-muted rounded-xl flex items-center gap-3 cursor-pointer hover:bg-rose-50/50 transition-colors"
+            >
+              <input
+                id={`civil-check-${item.id}`}
+                type="checkbox"
+                checked={item.completed}
+                onChange={() => {}}
+                className="w-4 h-4 rounded text-marsala-500 focus:ring-marsala-500 border-border cursor-pointer"
+              />
+              <label htmlFor={`civil-check-${item.id}`} className="cursor-pointer font-medium text-charcoal">
+                {item.title}
+              </label>
+            </div>
+          ))}
         </div>
       </div>
     </div>

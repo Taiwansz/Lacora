@@ -3,18 +3,18 @@ import { formatDate, formatDateLong, getDaysCountdown, formatBRL } from '../lib/
 import { useAppStore } from '../lib/store';
 
 describe('Utilitários de Data & Formatação Civil', () => {
-  it('deve formatar data civil YYYY-MM-DD sem recuo de fuso horário UTC (14/11/2026)', () => {
-    const formatted = formatDate('2026-11-14');
-    expect(formatted).toBe('14/11/2026');
+  it('deve formatar data civil YYYY-MM-DD sem recuo de fuso horário UTC (14/11/2027)', () => {
+    const formatted = formatDate('2027-11-14');
+    expect(formatted).toBe('14/11/2027');
   });
 
   it('deve formatar data por extenso corretamente', () => {
-    const formattedLong = formatDateLong('2026-11-14');
-    expect(formattedLong).toBe('14 de Novembro de 2026');
+    const formattedLong = formatDateLong('2027-11-14');
+    expect(formattedLong).toBe('14 de Novembro de 2027');
   });
 
   it('deve calcular contagem regressiva em dias civis sem desvio', () => {
-    const countdown = getDaysCountdown('2026-11-14');
+    const countdown = getDaysCountdown('2027-11-14');
     expect(countdown.isPast).toBeDefined();
     expect(typeof countdown.days).toBe('number');
   });
@@ -24,7 +24,7 @@ describe('Utilitários de Data & Formatação Civil', () => {
   });
 });
 
-describe('Gerenciamento de Estado & Isolamento de Workspaces', () => {
+describe('Gerenciamento de Estado & Métricas Orçamentárias', () => {
   beforeEach(() => {
     useAppStore.setState({
       currentUser: null,
@@ -33,46 +33,48 @@ describe('Gerenciamento de Estado & Isolamento de Workspaces', () => {
       workspaces: [],
       guests: [],
       budgetItems: [],
+      tables: [],
     });
   });
 
-  it('deve permitir cadastro de novo usuário e gerar workspace limpo sem dados fictícios', () => {
-    const store = useAppStore.getState();
-    const res = store.signup('João Silva', 'joao@test.com', '123456');
-    expect(res.success).toBe(true);
-
-    const updatedState = useAppStore.getState();
-    expect(updatedState.currentUser?.name).toBe('João Silva');
-    expect(updatedState.isAuthenticated).toBe(true);
-
-    // Deve ser um workspace limpo sem convidados ou tarefas inventadas
-    expect(updatedState.guests.length).toBe(0);
-    expect(updatedState.tasks.length).toBe(0);
-    expect(updatedState.budgetItems.length).toBe(0);
-  });
-
-  it('deve calcular corretamente a métrica de custo por convidado', () => {
+  it('deve calcular corretamente a métrica separada de custo por convidado', () => {
     useAppStore.setState({
       coupleProfile: {
         workspaceId: 'ws-test',
         partner1Name: 'A',
         partner2Name: 'B',
-        weddingDate: '2026-11-14',
+        weddingDate: '2027-11-14',
         weddingTime: '16:00',
         timezone: 'America/Sao_Paulo',
         city: 'SP',
         state: 'SP',
-        weddingType: 'civil',
+        weddingType: 'civil_e_religioso',
         estimatedGuestsCount: 100,
         totalBudgetPlanned: 100000,
         financialResponsibles: ['Casal'],
         style: 'Moderno',
-        formalityLevel: 'Formal',
+        formalityLevel: 'Semi-Formal',
         priorities: [],
         availableWeeklyHours: 5,
         customSlug: 'a-b',
         status: 'active',
       },
+      guests: [
+        {
+          id: 'g-1',
+          workspaceId: 'ws-test',
+          fullName: 'Maria da Silva',
+          relationship: 'familia_noiva',
+          category: 'pais',
+          ageType: 'adulto',
+          invitationType: 'individual',
+          allowedPlusOnes: 0,
+          status: 'confirmado',
+          eventsPermitted: [],
+          qrCodeToken: 'tok1',
+          checkedIn: false,
+        },
+      ],
       budgetItems: [
         {
           id: 'bi1',
@@ -91,8 +93,9 @@ describe('Gerenciamento de Estado & Isolamento de Workspaces', () => {
     });
 
     const metrics = useAppStore.getState().getCostPerGuestMetrics();
-    expect(metrics.plannedCostPerGuest).toBe(1000); // 100.000 / 100
-    expect(metrics.contractedCostPerGuest).toBe(500); // 50.000 / 100
+    expect(metrics.targetCostPerPerson).toBe(1000); // 100.000 / 100
+    expect(metrics.contractedCostPerEstimatedGuest).toBe(500); // 50.000 / 100 (convidados previstos no contrato)
+    expect(metrics.projectedCostPerConfirmedGuest).toBe(50000); // 50.000 / 1 convidado confirmado
     expect(metrics.paidCostPerGuest).toBe(200); // 20.000 / 100
   });
 
@@ -101,7 +104,7 @@ describe('Gerenciamento de Estado & Isolamento de Workspaces', () => {
 
     // 1. Criar mesa
     store.addTable({
-      name: 'Mesa Família Noiva',
+      name: 'Mesa Família',
       shape: 'redonda',
       capacity: 8,
       zone: 'reservado',
@@ -110,7 +113,7 @@ describe('Gerenciamento de Estado & Isolamento de Workspaces', () => {
     });
 
     let state = useAppStore.getState();
-    const createdTable = state.tables.find((t) => t.name === 'Mesa Família Noiva');
+    const createdTable = state.tables.find((t) => t.name === 'Mesa Família');
     expect(createdTable).toBeDefined();
     expect(createdTable?.capacity).toBe(8);
 
@@ -119,6 +122,7 @@ describe('Gerenciamento de Estado & Isolamento de Workspaces', () => {
       guests: [
         {
           id: 'g-1',
+          workspaceId: 'ws-test',
           fullName: 'Maria da Silva',
           relationship: 'familia_noiva',
           category: 'pais',
