@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
-import { Lock, Mail, User as UserIcon, ArrowRight, ShieldCheck, Check } from 'lucide-react';
+import { Lock, Mail, User as UserIcon, ArrowRight } from 'lucide-react';
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -18,24 +18,27 @@ export default function CadastroPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const res = signup(name, email, password, confirmPassword, acceptedTerms);
+    try {
+      const res = await signup(name, email, password, confirmPassword, acceptedTerms);
       setIsLoading(false);
       if (res.success) {
         router.push('/onboarding');
       } else {
         setErrorMsg(res.error || 'Erro ao realizar cadastro.');
       }
-    }, 400);
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMsg(err?.message || 'Erro ao realizar cadastro.');
+    }
   };
 
   return (
-    <div className="bg-surface p-8 rounded-3xl border border-border shadow-floating space-y-6">
+    <div className="bg-surface p-8 rounded-3xl border border-border shadow-floating space-y-6 max-w-md mx-auto">
       {/* Brand Header */}
       <div className="text-center space-y-2">
         <Link href="/" className="inline-block">
@@ -65,6 +68,8 @@ export default function CadastroPage() {
             <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               id="reg-name"
+              name="fullName"
+              autoComplete="name"
               type="text"
               required
               value={name}
@@ -83,12 +88,14 @@ export default function CadastroPage() {
             <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               id="reg-email"
+              name="email"
+              autoComplete="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-9 pr-3 py-2.5 text-xs border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
-              placeholder="seuemail@exemplo.com"
+              placeholder="seuemail@empresa.com.br"
             />
           </div>
         </div>
@@ -101,6 +108,8 @@ export default function CadastroPage() {
             <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               id="reg-password"
+              name="new-password"
+              autoComplete="new-password"
               type="password"
               required
               value={password}
@@ -119,6 +128,8 @@ export default function CadastroPage() {
             <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               id="reg-confirm-password"
+              name="confirm-password"
+              autoComplete="new-password"
               type="password"
               required
               value={confirmPassword}
@@ -133,6 +144,7 @@ export default function CadastroPage() {
         <div className="flex items-start gap-2 pt-1">
           <input
             id="reg-terms"
+            name="acceptedTerms"
             type="checkbox"
             required
             checked={acceptedTerms}

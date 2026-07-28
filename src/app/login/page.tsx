@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
-import { Lock, Mail, ArrowRight, Eye, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Eye } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,20 +15,23 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const res = login(email, password);
+    try {
+      const res = await login(email, password);
       setIsLoading(false);
       if (res.success) {
         router.push('/dashboard');
       } else {
         setErrorMsg(res.error || 'Credenciais inválidas. Verifique seu e-mail e senha.');
       }
-    }, 400);
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMsg(err?.message || 'Erro ao realizar login.');
+    }
   };
 
   const handleDemoMode = () => {
@@ -37,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-surface p-8 rounded-3xl border border-border shadow-floating space-y-6">
+    <div className="bg-surface p-8 rounded-3xl border border-border shadow-floating space-y-6 max-w-md mx-auto">
       {/* Brand Header */}
       <div className="text-center space-y-2">
         <Link href="/" className="inline-block">
@@ -61,7 +64,7 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="login-email" className="block text-xs font-semibold text-charcoal mb-1">
-            E-mail Cadastrado
+            E-mail Cadastrado *
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -72,7 +75,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-9 pr-3 py-2.5 text-xs border border-border rounded-xl outline-none focus:ring-2 focus:ring-marsala-500"
-              placeholder="seuemail@exemplo.com"
+              placeholder="seuemail@empresa.com.br"
             />
           </div>
         </div>
@@ -80,7 +83,7 @@ export default function LoginPage() {
         <div>
           <div className="flex items-center justify-between mb-1">
             <label htmlFor="login-password" className="block text-xs font-semibold text-charcoal">
-              Senha de Acesso
+              Senha de Acesso *
             </label>
             <Link href="/recuperar-senha" className="text-[11px] text-marsala-500 hover:underline">
               Esqueceu a senha?
@@ -113,6 +116,7 @@ export default function LoginPage() {
       {/* Demo & Register Controls */}
       <div className="pt-4 border-t border-border space-y-3 text-center">
         <button
+          type="button"
           onClick={handleDemoMode}
           className="w-full py-2.5 bg-surface-muted text-charcoal font-semibold text-xs rounded-xl border border-border hover:bg-rose-50 hover:text-marsala-500 transition-colors flex items-center justify-center gap-2"
         >

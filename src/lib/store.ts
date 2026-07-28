@@ -98,15 +98,15 @@ export interface AppStoreState {
   };
 
   // Auth Actions
-  login: (email: string, pass: string) => { success: boolean; error?: string };
+  login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signup: (
     name: string,
     email: string,
     pass: string,
     confirmPass: string,
     acceptedTerms: boolean
-  ) => { success: boolean; error?: string };
-  logout: () => void;
+  ) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   verifyEmail: () => void;
   updatePassword: (oldPass: string, newPass: string) => { success: boolean; error?: string };
   deleteAccount: (pass: string) => { success: boolean; error?: string };
@@ -342,12 +342,15 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       // Auth Implementation
-      login: (email, pass) => {
+      login: async (email, pass) => {
         const cleanEmail = email.trim().toLowerCase();
 
         // Se for o e-mail de demonstração, ativa o modo demo com dados fictícios
         if (cleanEmail === 'demo@nossograndedia.app') {
           get().enterDemoMode();
+          if (typeof document !== 'undefined') {
+            document.cookie = 'nosso_grande_dia_demo_mode=true; path=/; max-age=86400';
+          }
           return { success: true };
         }
 
@@ -355,46 +358,40 @@ export const useAppStore = create<AppStoreState>()(
           return { success: false, error: 'Por favor, informe o e-mail e a senha.' };
         }
 
-        const users = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('nosso_users') || '[]') : [];
-        let user = users.find((u: User) => u.email.toLowerCase() === cleanEmail);
-
-        if (!user) {
-          // Cria usuário real limpo
-          const formattedName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-
-          user = {
-            id: `user-${Date.now()}`,
-            name: formattedName,
-            email: cleanEmail,
-            emailVerified: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('nosso_users', JSON.stringify([...users, user]));
-          }
+        const res = await SupabaseService.signInUser(cleanEmail, pass);
+        if (res.error) {
+          return { success: false, error: res.error.message || 'E-mail ou senha incorretos.' };
         }
 
-        const validUser: User = user;
+        if (typeof document !== 'undefined') {
+          document.cookie = 'nosso_grande_dia_demo_mode=false; path=/; max-age=0';
+        }
+
+        const userObj = res.data?.user;
+        const validUser: User = {
+          id: userObj?.id || `user-${Date.now()}`,
+          name: userObj?.user_metadata?.full_name || cleanEmail.split('@')[0],
+          email: cleanEmail,
+          emailVerified: !!userObj?.email_confirmed_at,
+          createdAt: userObj?.created_at || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
 
         set({
           currentUser: validUser,
           isAuthenticated: true,
         });
 
-        // Se o workspace ativo for o de demonstração, cria/inicializa um workspace REAL limpo para o usuário
         const activeWs = get().workspaces.find((w) => w.id === get().activeWorkspaceId);
         if (!activeWs || activeWs.isDemoWorkspace || get().activeWorkspaceId === DEMO_WORKSPACE_ID) {
           const partner1Name = validUser.name.split(' ')[0] || 'Parceiro 1';
           get().createNewRealWorkspace(`Casamento de ${validUser.name}`, partner1Name, 'Parceiro 2');
         }
 
-        SupabaseService.signInUser(cleanEmail, pass);
         return { success: true };
       },
 
-      signup: (name, email, pass, confirmPass, acceptedTerms) => {
+      signup: async (name, email, pass, confirmPass, acceptedTerms) => {
         const cleanEmail = email.trim().toLowerCase();
 
         if (!name || !cleanEmail || !pass) {
@@ -414,34 +411,36 @@ export const useAppStore = create<AppStoreState>()(
           return { success: false, error: passValidation.message };
         }
 
+        const res = await SupabaseService.signUpUser(cleanEmail, pass, name);
+        if (res.error) {
+          return { success: false, error: res.error.message };
+        }
+
+        const userObj = res.data?.user;
         const newUser: User = {
-          id: `user-${Date.now()}`,
+          id: userObj?.id || `user-${Date.now()}`,
           name,
           email: cleanEmail,
-          emailVerified: true,
+          emailVerified: !!userObj?.email_confirmed_at,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-
-        if (typeof window !== 'undefined') {
-          const existingUsers = JSON.parse(localStorage.getItem('nosso_users') || '[]');
-          const filtered = existingUsers.filter((u: User) => u.email.toLowerCase() !== cleanEmail);
-          localStorage.setItem('nosso_users', JSON.stringify([...filtered, newUser]));
-        }
 
         set({
           currentUser: newUser,
           isAuthenticated: true,
         });
 
-        // Automatically create clean workspace for real user
         get().createNewRealWorkspace(`Casamento de ${name}`, name.split(' ')[0] || 'Parceiro 1', 'Parceiro 2');
-        SupabaseService.signUpUser(cleanEmail, pass, name);
         return { success: true };
       },
 
-      logout: () => {
-        set({ currentUser: null, isAuthenticated: false });
+      logout: async () => {
+        await SupabaseService.signOutUser();
+        if (typeof document !== 'undefined') {
+          document.cookie = 'nosso_grande_dia_demo_mode=false; path=/; max-age=0';
+        }
+        set({ currentUser: null, isAuthenticated: false, activeWorkspaceId: DEMO_WORKSPACE_ID });
       },
 
       verifyEmail: () => set((state) => ({

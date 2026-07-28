@@ -21,22 +21,22 @@ describe('Autenticação, Regras de Senha & Multi-Tenancy', () => {
     expect(validateStrongPassword('SenhaForte123!').valid).toBe(true);
   });
 
-  it('deve exigir aceite dos Termos de Uso no cadastro', () => {
+  it('deve exigir aceite dos Termos de Uso no cadastro', async () => {
     const store = useAppStore.getState();
-    const res = store.signup('Usuário Teste', 'usuario@exemplo.example', 'SenhaForte123!', 'SenhaForte123!', false);
+    const res = await store.signup('Usuário Teste', 'usuario@exemplo.com.br', 'SenhaForte123!', 'SenhaForte123!', false);
 
     expect(res.success).toBe(false);
     expect(res.error).toContain('Termos de Uso');
   });
 
-  it('deve cadastrar usuário com sucesso e criar workspace limpo sem dados fictícios', () => {
+  it('deve cadastrar usuário com sucesso e criar workspace limpo sem dados fictícios', async () => {
     const store = useAppStore.getState();
-    const res = store.signup('Usuário Teste', 'usuario@exemplo.example', 'SenhaForte123!', 'SenhaForte123!', true);
+    const res = await store.signup('Usuário Teste', 'usuario@exemplo.com.br', 'SenhaForte123!', 'SenhaForte123!', true);
 
     expect(res.success).toBe(true);
     const state = useAppStore.getState();
     expect(state.isAuthenticated).toBe(true);
-    expect(state.currentUser?.email).toBe('usuario@exemplo.example');
+    expect(state.currentUser?.email).toBe('usuario@exemplo.com.br');
     expect(state.currentUser?.name).toBe('Usuário Teste');
 
     // Workspace do usuário real deve estar completamente limpo
