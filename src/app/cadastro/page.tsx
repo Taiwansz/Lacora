@@ -41,9 +41,11 @@ export default function CadastroPage() {
       } else {
         setErrorMsg(res.error || 'Erro ao realizar cadastro.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setIsLoading(false);
-      setErrorMsg(err?.message || 'Erro ao realizar cadastro.');
+      setErrorMsg(
+        err instanceof Error ? err.message : 'Erro ao realizar cadastro.'
+      );
     }
   };
 
@@ -61,7 +63,7 @@ export default function CadastroPage() {
       </div>
 
       {errorMsg && (
-        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium">
+        <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium">
           {errorMsg}
         </div>
       )}

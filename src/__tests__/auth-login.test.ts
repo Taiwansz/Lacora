@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useAppStore, validateStrongPassword } from '../lib/store';
+import { getAuthErrorMessage } from '../lib/auth-errors';
 
 describe('Autenticação, Regras de Senha & Multi-Tenancy', () => {
   beforeEach(() => {
@@ -19,6 +20,21 @@ describe('Autenticação, Regras de Senha & Multi-Tenancy', () => {
     expect(validateStrongPassword('semnumero!').valid).toBe(false);
     expect(validateStrongPassword('SemSimbolo123').valid).toBe(false);
     expect(validateStrongPassword('SenhaForte123!').valid).toBe(true);
+  });
+
+  it('deve traduzir o limite de e-mail do Supabase para uma mensagem útil', () => {
+    const message = getAuthErrorMessage(
+      {
+        code: 'over_email_send_rate_limit',
+        message: 'email rate limit exceeded',
+        status: 429,
+      },
+      'Falha no cadastro.'
+    );
+
+    expect(message).toContain('limite temporário');
+    expect(message).toContain('uma hora');
+    expect(message).not.toContain('rate limit');
   });
 
   it('deve exigir aceite dos Termos de Uso no cadastro', async () => {
