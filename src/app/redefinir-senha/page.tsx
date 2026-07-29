@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SupabaseService } from '@/lib/supabase-service';
 import { validateStrongPassword } from '@/lib/store';
+import { LacoraLogo } from '@/components/brand/LacoraLogo';
 
 export default function RedefinirSenhaPage() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export default function RedefinirSenhaPage() {
 
   return (
     <div className="mx-auto max-w-md rounded-3xl border border-border bg-surface p-8 shadow-floating">
+      <LacoraLogo className="mb-6" />
       <h1 className="font-serif text-2xl font-bold text-charcoal">Definir nova senha</h1>
       <p className="mt-2 text-xs text-slate-500">Use no mínimo 8 caracteres, com maiúscula, número e símbolo.</p>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
