@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://nossograndedia.com.br';
+  const baseUrl = 'https://nosso-grande-dia-omega.vercel.app';
 
   const publicRoutes = [
     '',
