@@ -16,18 +16,27 @@ export default function CadastroPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setSuccessMsg('');
     setIsLoading(true);
 
     try {
       const res = await signup(name, email, password, confirmPassword, acceptedTerms);
       setIsLoading(false);
       if (res.success) {
-        router.push('/onboarding');
+        if (res.requiresEmailConfirmation) {
+          setSuccessMsg(
+            'Conta criada. Confirme seu e-mail pelo link enviado antes de fazer login.'
+          );
+        } else {
+          router.push('/onboarding');
+          router.refresh();
+        }
       } else {
         setErrorMsg(res.error || 'Erro ao realizar cadastro.');
       }
@@ -55,6 +64,12 @@ export default function CadastroPage() {
       {errorMsg && (
         <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium">
           {errorMsg}
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-medium">
+          {successMsg}
         </div>
       )}
 

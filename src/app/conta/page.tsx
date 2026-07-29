@@ -13,7 +13,7 @@ export default function ContaPage() {
   const [msg, setMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg('');
     setErrorMsg('');
@@ -23,7 +23,7 @@ export default function ContaPage() {
       return;
     }
 
-    const res = updatePassword(oldPassword, newPassword);
+    const res = await updatePassword(oldPassword, newPassword);
     if (res.success) {
       setOldPassword('');
       setNewPassword('');
@@ -34,14 +34,16 @@ export default function ContaPage() {
     }
   };
 
-  const handleDeleteAccount = (e: React.FormEvent) => {
+  const handleDeleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
-    const res = deleteAccount(deletePass);
+    const res = await deleteAccount(deletePass);
     if (!res.success) {
       setErrorMsg(res.error || 'Senha incorreta.');
+      return;
     }
+    window.location.assign('/');
   };
 
   return (
@@ -99,7 +101,15 @@ export default function ContaPage() {
               ) : (
                 <button
                   type="button"
-                  onClick={verifyEmail}
+                  onClick={async () => {
+                    setErrorMsg('');
+                    const result = await verifyEmail();
+                    if (result.success) {
+                      setMsg('E-mail de verificação reenviado.');
+                    } else {
+                      setErrorMsg(result.error || 'Não foi possível reenviar o e-mail.');
+                    }
+                  }}
                   className="text-xs font-bold text-white bg-marsala-500 hover:bg-marsala-600 px-3 py-1.5 rounded-xl shadow-card shrink-0"
                 >
                   Verificar E-mail

@@ -34,9 +34,17 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoMode = () => {
-    enterDemoMode();
+  const handleDemoMode = async () => {
+    setErrorMsg('');
+    setIsLoading(true);
+    const result = await enterDemoMode();
+    setIsLoading(false);
+    if (!result.success) {
+      setErrorMsg(result.error || 'Não foi possível iniciar a demonstração.');
+      return;
+    }
     router.push('/dashboard');
+    router.refresh();
   };
 
   return (
@@ -118,6 +126,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={handleDemoMode}
+          disabled={isLoading}
           className="w-full py-2.5 bg-surface-muted text-charcoal font-semibold text-xs rounded-xl border border-border hover:bg-rose-50 hover:text-marsala-500 transition-colors flex items-center justify-center gap-2"
         >
           <Eye className="w-4 h-4 text-marsala-500" />

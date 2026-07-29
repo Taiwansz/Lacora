@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useAppStore } from '@/lib/store';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { MobileNav } from './MobileNav';
@@ -9,6 +10,8 @@ import Link from 'next/link';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '/';
+  const initializeSession = useAppStore((state) => state.initializeSession);
+  const isReadOnlyMode = useAppStore((state) => state.isReadOnlyMode());
 
   const isPublicMarketingRoute =
     pathname === '/' ||
@@ -24,9 +27,39 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const isPublicWeddingOrRSVP =
     pathname.startsWith('/rsvp/') ||
+    pathname.startsWith('/w/') ||
     (pathname.startsWith('/site/') && pathname !== '/site');
 
   const isOnboardingRoute = pathname === '/onboarding';
+  const isPrivateWorkspaceRoute =
+    !isPublicMarketingRoute &&
+    !isAuthRoute &&
+    !isPublicWeddingOrRSVP;
+  const [sessionReady, setSessionReady] = useState(!isPrivateWorkspaceRoute);
+
+  useEffect(() => {
+    if (!isPrivateWorkspaceRoute) {
+      setSessionReady(true);
+      return;
+    }
+
+    let active = true;
+    setSessionReady(false);
+    initializeSession().finally(() => {
+      if (active) setSessionReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [initializeSession, isPrivateWorkspaceRoute]);
+
+  if (isPrivateWorkspaceRoute && !sessionReady) {
+    return (
+      <div className="min-h-screen bg-background text-charcoal flex items-center justify-center">
+        <p className="text-sm text-slate-500">Carregando seu workspace...</p>
+      </div>
+    );
+  }
 
   // 1. Marketing Layout
   if (isPublicMarketingRoute) {
@@ -101,7 +134,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <h4 className="font-bold text-charcoal mb-3 uppercase tracking-wider text-[11px]">Produto</h4>
               <ul className="space-y-2">
                 <li><Link href="/#recursos" className="hover:text-marsala-500">Recursos Mapeados</Link></li>
-                <li><Link href="/#precos" className="hover:text-marsala-500">Planos Commercias</Link></li>
+                <li><Link href="/#precos" className="hover:text-marsala-500">Planos Comerciais</Link></li>
                 <li><Link href="/login" className="hover:text-marsala-500">Modo de Demonstração</Link></li>
               </ul>
             </div>
@@ -119,14 +152,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div>
               <h4 className="font-bold text-charcoal mb-3 uppercase tracking-wider text-[11px]">Compromisso</h4>
               <p className="text-slate-500 leading-relaxed">
-                Proteção de dados com criptografia de ponta a ponta em trânsito e em repouso. Conformidade total com a LGPD e GDPR.
+                Controles de acesso, criptografia em trânsito e recursos desenvolvidos com privacidade desde a concepção.
               </p>
             </div>
           </div>
 
           <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
             <p>&copy; {new Date().getFullYear()} Nosso Grande Dia Tecnologia SaaS. Todos os direitos reservados.</p>
-            <p className="text-[11px]">Ambiente 100% seguro e homologado.</p>
+            <p className="text-[11px]">Segurança e privacidade acompanhadas continuamente.</p>
           </div>
         </footer>
       </div>
@@ -173,7 +206,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
         <Header />
         <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
-          {children}
+          <fieldset disabled={isReadOnlyMode} className="contents">
+            {children}
+          </fieldset>
         </main>
       </div>
       <MobileNav />

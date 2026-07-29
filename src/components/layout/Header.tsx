@@ -69,9 +69,9 @@ export const Header: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-serif font-bold text-charcoal text-sm lg:text-base leading-none">
+              <p className="font-serif font-bold text-charcoal text-sm lg:text-base leading-none">
                 {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}
-              </h1>
+              </p>
               {isDemo && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
                   Demonstração Modelo
@@ -119,7 +119,10 @@ export const Header: React.FC = () => {
           {/* User Account / Logout */}
           {currentUser ? (
             <button
-              onClick={logout}
+              onClick={async () => {
+                await logout();
+                window.location.assign('/login');
+              }}
               className="p-2 rounded-lg text-slate-500 hover:text-marsala-500 hover:bg-surface-muted transition-colors flex items-center gap-1 text-xs font-semibold"
               title="Sair da Conta"
             >

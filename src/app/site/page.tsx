@@ -16,9 +16,8 @@ export default function SitePage() {
   const dateText = coupleProfile.weddingDate ? formatDateLong(coupleProfile.weddingDate).toUpperCase() : 'DATA A DEFINIR';
   const cityText = coupleProfile.city ? coupleProfile.city.toUpperCase() : 'CIDADE A DEFINIR';
 
-  const publicUrl = `https://nossograndedia.app/site/${slug}`;
-
   const copyLink = () => {
+    const publicUrl = `${window.location.origin}/w/${slug}`;
     navigator.clipboard.writeText(publicUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -48,11 +47,11 @@ export default function SitePage() {
             <Copy className="w-4 h-4" /> {copied ? 'Link Copiado!' : 'Copiar Link Público'}
           </button>
           <Link
-            href={`/rsvp/convite-exemplo`}
+            href={`/w/${slug}`}
             target="_blank"
             className="flex items-center gap-2 bg-marsala-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-card hover:bg-marsala-600 transition-colors"
           >
-            <Eye className="w-4 h-4" /> Visualizar Formulário RSVP
+            <Eye className="w-4 h-4" /> Visualizar Site Público
           </Link>
         </div>
       </div>
@@ -78,7 +77,7 @@ export default function SitePage() {
             <Heart className="w-8 h-8 text-marsala-500 mx-auto" />
             <h3 className="font-serif text-2xl font-bold text-charcoal">Nossa História de Amor</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              "Nos conhecemos e decidimos construir uma linda história juntos. É com enorme alegria que compartilhamos este momento especial com vocês..."
+              &ldquo;Nos conhecemos e decidimos construir uma linda história juntos. É com enorme alegria que compartilhamos este momento especial com vocês...&rdquo;
             </p>
           </div>
 

@@ -39,9 +39,17 @@ describe('Gerenciamento de Estado & Métricas Orçamentárias', () => {
   beforeEach(() => {
     useAppStore.setState({
       currentUser: null,
-      isAuthenticated: false,
+      isAuthenticated: true,
       activeWorkspaceId: 'ws-test',
-      workspaces: [],
+      workspaces: [{
+        id: 'ws-test',
+        name: 'Workspace de Teste',
+        slug: 'workspace-teste',
+        isDemoWorkspace: false,
+        ownerId: 'test-user',
+        createdAt: '2026-07-28',
+        updatedAt: '2026-07-28',
+      }],
       guests: [],
       budgetItems: [],
       tables: [],

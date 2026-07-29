@@ -9,6 +9,7 @@ export default function ConfiguracoesPage() {
   const [partner1, setPartner1] = useState(coupleProfile.partner1Name);
   const [partner2, setPartner2] = useState(coupleProfile.partner2Name);
   const [budget, setBudget] = useState(coupleProfile.totalBudgetPlanned);
+  const [saved, setSaved] = useState(false);
 
   const currentRole = getCurrentRole();
 
@@ -19,7 +20,8 @@ export default function ConfiguracoesPage() {
       partner2Name: partner2,
       totalBudgetPlanned: Number(budget),
     });
-    alert('Configurações salvas com sucesso!');
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   return (
@@ -35,6 +37,7 @@ export default function ConfiguracoesPage() {
       </div>
 
       {/* Settings Form */}
+      {saved && <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800">Configurações salvas.</p>}
       <form onSubmit={handleSave} className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-4">
         <h2 className="font-serif text-base font-bold text-charcoal">Parâmetros Principais</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

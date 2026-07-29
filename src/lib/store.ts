@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { SupabaseService } from './supabase-service';
 import {
   User,
@@ -98,6 +97,7 @@ export interface AppStoreState {
   };
 
   // Auth Actions
+  initializeSession: () => Promise<void>;
   login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signup: (
     name: string,
@@ -105,18 +105,22 @@ export interface AppStoreState {
     pass: string,
     confirmPass: string,
     acceptedTerms: boolean
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; requiresEmailConfirmation?: boolean }>;
   logout: () => Promise<void>;
-  verifyEmail: () => void;
-  updatePassword: (oldPass: string, newPass: string) => { success: boolean; error?: string };
-  deleteAccount: (pass: string) => { success: boolean; error?: string };
-  enterDemoMode: () => void;
+  verifyEmail: () => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (oldPass: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
+  deleteAccount: (pass: string) => Promise<{ success: boolean; error?: string }>;
+  enterDemoMode: () => Promise<{ success: boolean; error?: string }>;
 
   // Workspace & Membership Actions
-  setActiveWorkspace: (workspaceId: string) => void;
-  createNewRealWorkspace: (weddingName: string, partner1: string, partner2: string) => string;
-  deleteCurrentWorkspace: () => void;
-  inviteTeamMember: (email: string, role: UserRole) => void;
+  setActiveWorkspace: (workspaceId: string) => Promise<{ success: boolean; error?: string }>;
+  createNewRealWorkspace: (
+    weddingName: string,
+    partner1: string,
+    partner2: string
+  ) => Promise<{ success: boolean; workspaceId?: string; error?: string }>;
+  deleteCurrentWorkspace: () => Promise<{ success: boolean; error?: string }>;
+  inviteTeamMember: (email: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
 
   // Onboarding
   completeRealOnboarding: (data: Partial<CoupleProfile>) => void;
@@ -159,7 +163,7 @@ export interface AppStoreState {
   deleteTable: (id: string) => void;
   addVenue: (venue: Omit<Venue, 'id' | 'workspaceId'>) => void;
   addDocument: (doc: Omit<Document, 'id' | 'workspaceId' | 'uploadedAt'>) => void;
-  deleteDocument: (id: string) => void;
+  deleteDocument: (id: string) => Promise<{ success: boolean; error?: string }>;
 
   addTimelineItem: (item: Omit<TimelineItem, 'id' | 'workspaceId'>) => void;
   addRiskItem: (risk: Omit<RiskItem, 'id' | 'workspaceId'>) => void;
@@ -204,8 +208,175 @@ export function validateStrongPassword(pass: string): { valid: boolean; message?
   return { valid: true };
 }
 
+const SNAPSHOT_KEYS = [
+  'coupleProfile',
+  'palette',
+  'venues',
+  'outfits',
+  'households',
+  'guests',
+  'tables',
+  'seats',
+  'tasks',
+  'vendors',
+  'budgetItems',
+  'payments',
+  'timeline',
+  'documents',
+  'gifts',
+  'photoShots',
+  'notifications',
+  'activityLogs',
+  'moodboard',
+  'decorItems',
+  'menuItems',
+  'risks',
+  'civilInfo',
+  'websiteSettings',
+] as const;
+
+function emptyWorkspaceState(
+  workspaceId: string,
+  partner1: string,
+  partner2: string,
+  slug: string
+): Partial<AppStoreState> {
+  return {
+    coupleProfile: {
+      workspaceId,
+      partner1Name: partner1,
+      partner2Name: partner2,
+      weddingDate: '',
+      weddingTime: '16:00',
+      timezone: 'America/Sao_Paulo',
+      city: '',
+      state: '',
+      weddingType: 'civil_e_religioso',
+      estimatedGuestsCount: 0,
+      totalBudgetPlanned: 0,
+      financialResponsibles: [],
+      style: '',
+      formalityLevel: 'Semi-Formal',
+      priorities: [],
+      availableWeeklyHours: 0,
+      customSlug: slug,
+      status: 'onboarding',
+    },
+    palette: {
+      workspaceId,
+      colors: [],
+      primaryTypography: 'Playfair Display',
+      secondaryTypography: 'Plus Jakarta Sans',
+    },
+    guests: [],
+    households: [],
+    tables: [],
+    seats: [],
+    tasks: [],
+    vendors: [],
+    budgetItems: [],
+    payments: [],
+    outfits: [],
+    venues: [],
+    documents: [],
+    timeline: [],
+    decorItems: [],
+    risks: [],
+    gifts: [],
+    photoShots: [],
+    notifications: [],
+    activityLogs: [],
+    moodboard: [],
+    menuItems: [],
+    civilInfo: {
+      workspaceId,
+      cartorioName: '',
+      cartorioCity: '',
+      cartorioState: '',
+      regimeDeBens: 'comunhao_parcial',
+      hasPactoAntenupcial: false,
+      processStatus: 'documentos_pendentes',
+      checklists: [
+        { id: 'c1', title: 'Certidões de nascimento atualizadas (90 dias)', completed: false },
+        { id: 'c2', title: 'Comprovantes de residência dos noivos', completed: false },
+        { id: 'c3', title: 'RG e CPF das 2 testemunhas', completed: false },
+      ],
+    },
+    websiteSettings: {
+      title: `Casamento ${partner1} & ${partner2}`,
+      storyText: '',
+      dressCodeNotes: '',
+      lodgingNotes: '',
+      isPublished: false,
+      customSlug: slug,
+    },
+  };
+}
+
+function appUserFromSupabase(user: any): User {
+  return {
+    id: user.id,
+    name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+    email: user.email || '',
+    emailVerified: Boolean(user.email_confirmed_at),
+    createdAt: user.created_at || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function newEntityId(prefix: string) {
+  return `${prefix}-${crypto.randomUUID()}`;
+}
+
+async function authenticatedWorkspaceState(
+  user: any,
+  preferredWorkspaceId?: string
+): Promise<Partial<AppStoreState>> {
+  const appUser = appUserFromSupabase(user);
+  let workspaceResult = await SupabaseService.loadWorkspace(preferredWorkspaceId);
+
+  if (!workspaceResult.data && !workspaceResult.error && !preferredWorkspaceId) {
+    const firstName = appUser.name.trim().split(/\s+/)[0] || 'Parceiro 1';
+    const creation = await SupabaseService.createWorkspace({
+      name: `Casamento de ${appUser.name}`,
+      partner1: firstName,
+      partner2: 'Parceiro 2',
+    });
+    if (creation.error) throw creation.error;
+    workspaceResult = await SupabaseService.loadWorkspace(creation.workspaceId || undefined);
+  }
+
+  if (workspaceResult.error) throw workspaceResult.error;
+  if (!workspaceResult.data) throw new Error('Não foi possível carregar o workspace.');
+
+  const { workspace, membership, profile, snapshot } = workspaceResult.data;
+  const base = emptyWorkspaceState(
+    workspace.id,
+    profile?.partner1Name || appUser.name,
+    profile?.partner2Name || 'Parceiro 2',
+    profile?.customSlug || workspace.slug
+  );
+  const safeSnapshot: Partial<AppStoreState> = {};
+
+  for (const key of SNAPSHOT_KEYS) {
+    if (snapshot && Object.prototype.hasOwnProperty.call(snapshot, key)) {
+      (safeSnapshot as any)[key] = snapshot[key];
+    }
+  }
+
+  return {
+    ...base,
+    ...safeSnapshot,
+    coupleProfile: (safeSnapshot.coupleProfile || profile || base.coupleProfile) as CoupleProfile,
+    currentUser: appUser,
+    isAuthenticated: true,
+    activeWorkspaceId: workspace.id,
+    workspaces: [workspace],
+    memberships: [membership],
+  };
+}
+
 export const useAppStore = create<AppStoreState>()(
-  persist(
     (set, get) => ({
       // Auth Initial State
       currentUser: null,
@@ -343,53 +514,49 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       // Auth Implementation
+      initializeSession: async () => {
+        const { data, error } = await SupabaseService.getCurrentUser();
+        if (error || !data.user) return;
+
+        try {
+          const workspaceState = await authenticatedWorkspaceState(data.user);
+          set(workspaceState);
+        } catch (workspaceError) {
+          console.error('Falha ao inicializar sessão:', workspaceError);
+        }
+      },
+
       login: async (email, pass) => {
         const cleanEmail = email.trim().toLowerCase();
 
-        // Se for o e-mail de demonstração, ativa o modo demo com dados fictícios
         if (cleanEmail === 'demo@nossograndedia.app') {
-          get().enterDemoMode();
-          if (typeof document !== 'undefined') {
-            document.cookie = 'nosso_grande_dia_demo_mode=true; path=/; max-age=86400';
-          }
-          return { success: true };
+          return get().enterDemoMode();
         }
 
         if (!cleanEmail || !pass) {
           return { success: false, error: 'Por favor, informe o e-mail e a senha.' };
         }
 
+        await fetch('/api/demo/session', { method: 'DELETE' }).catch(() => undefined);
         const res = await SupabaseService.signInUser(cleanEmail, pass);
-        if (res.error) {
-          return { success: false, error: res.error.message || 'E-mail ou senha incorretos.' };
+        if (res.error || !res.data?.user || !res.data.session) {
+          return { success: false, error: res.error?.message || 'E-mail ou senha incorretos.' };
         }
 
-        if (typeof document !== 'undefined') {
-          document.cookie = 'nosso_grande_dia_demo_mode=false; path=/; max-age=0';
+        try {
+          const workspaceState = await authenticatedWorkspaceState(res.data.user);
+          set(workspaceState);
+          return { success: true };
+        } catch (workspaceError) {
+          await SupabaseService.signOutUser();
+          return {
+            success: false,
+            error:
+              workspaceError instanceof Error
+                ? workspaceError.message
+                : 'Não foi possível carregar seu workspace.',
+          };
         }
-
-        const userObj = res.data?.user;
-        const validUser: User = {
-          id: userObj?.id || `user-${Date.now()}`,
-          name: userObj?.user_metadata?.full_name || cleanEmail.split('@')[0],
-          email: cleanEmail,
-          emailVerified: !!userObj?.email_confirmed_at,
-          createdAt: userObj?.created_at || new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        set({
-          currentUser: validUser,
-          isAuthenticated: true,
-        });
-
-        const activeWs = get().workspaces.find((w) => w.id === get().activeWorkspaceId);
-        if (!activeWs || activeWs.isDemoWorkspace || get().activeWorkspaceId === DEMO_WORKSPACE_ID) {
-          const partner1Name = validUser.name.split(' ')[0] || 'Parceiro 1';
-          get().createNewRealWorkspace(`Casamento de ${validUser.name}`, partner1Name, 'Parceiro 2');
-        }
-
-        return { success: true };
       },
 
       signup: async (name, email, pass, confirmPass, acceptedTerms) => {
@@ -413,57 +580,86 @@ export const useAppStore = create<AppStoreState>()(
         }
 
         const res = await SupabaseService.signUpUser(cleanEmail, pass, name);
-        if (res.error) {
-          return { success: false, error: res.error.message };
+        if (res.error || !res.data?.user) {
+          return { success: false, error: res.error?.message || 'Não foi possível criar a conta.' };
         }
 
-        const userObj = res.data?.user;
-        const newUser: User = {
-          id: userObj?.id || `user-${Date.now()}`,
-          name,
-          email: cleanEmail,
-          emailVerified: !!userObj?.email_confirmed_at,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        if (!res.data.session) {
+          return { success: true, requiresEmailConfirmation: true };
+        }
 
-        set({
-          currentUser: newUser,
-          isAuthenticated: true,
-        });
-
-        get().createNewRealWorkspace(`Casamento de ${name}`, name.split(' ')[0] || 'Parceiro 1', 'Parceiro 2');
-        return { success: true };
+        try {
+          const workspaceState = await authenticatedWorkspaceState(res.data.user);
+          set(workspaceState);
+          return { success: true };
+        } catch (workspaceError) {
+          return {
+            success: false,
+            error:
+              workspaceError instanceof Error
+                ? workspaceError.message
+                : 'Conta criada, mas o workspace não pôde ser inicializado.',
+          };
+        }
       },
 
       logout: async () => {
         await SupabaseService.signOutUser();
-        if (typeof document !== 'undefined') {
-          document.cookie = 'nosso_grande_dia_demo_mode=false; path=/; max-age=0';
-        }
+        await fetch('/api/demo/session', { method: 'DELETE' }).catch(() => undefined);
         set({ currentUser: null, isAuthenticated: false, activeWorkspaceId: DEMO_WORKSPACE_ID });
       },
 
-      verifyEmail: () => set((state) => ({
-        currentUser: state.currentUser ? { ...state.currentUser, emailVerified: true } : null
-      })),
+      verifyEmail: async () => {
+        const email = get().currentUser?.email;
+        if (!email) return { success: false, error: 'Usuário não autenticado.' };
+        const { error } = await SupabaseService.resendVerification(email);
+        return error
+          ? { success: false, error: error.message }
+          : { success: true };
+      },
 
-      updatePassword: (oldPass, newPass) => {
+      updatePassword: async (oldPass, newPass) => {
         const passValidation = validateStrongPassword(newPass);
         if (!passValidation.valid) {
           return { success: false, error: passValidation.message };
         }
-        return { success: true };
+        const email = get().currentUser?.email;
+        if (!email) return { success: false, error: 'Usuário não autenticado.' };
+
+        const reauthentication = await SupabaseService.signInUser(email, oldPass);
+        if (reauthentication.error) {
+          return { success: false, error: 'A senha atual está incorreta.' };
+        }
+
+        const { error } = await SupabaseService.updatePassword(newPass);
+        return error
+          ? { success: false, error: error.message }
+          : { success: true };
       },
 
-      deleteAccount: (pass) => {
+      deleteAccount: async (pass) => {
         if (!pass) return { success: false, error: 'Confirme sua senha para excluir a conta.' };
-        set({ currentUser: null, isAuthenticated: false });
+        const response = await fetch('/api/account', {
+          method: 'DELETE',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ password: pass }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          return { success: false, error: result.error || 'Não foi possível excluir a conta.' };
+        }
+        set({ currentUser: null, isAuthenticated: false, activeWorkspaceId: DEMO_WORKSPACE_ID });
         return { success: true };
       },
 
-      enterDemoMode: () => {
+      enterDemoMode: async () => {
+        const response = await fetch('/api/demo/session', { method: 'POST' });
+        if (!response.ok) {
+          return { success: false, error: 'Não foi possível iniciar a demonstração.' };
+        }
         set({
+          currentUser: null,
+          isAuthenticated: false,
           activeWorkspaceId: DEMO_WORKSPACE_ID,
           coupleProfile: demoCoupleProfile,
           palette: demoPalette,
@@ -483,165 +679,71 @@ export const useAppStore = create<AppStoreState>()(
           notifications: demoNotifications,
           activityLogs: demoActivityLog,
         });
+        return { success: true };
       },
 
       // Workspace & Membership Management
-      setActiveWorkspace: (workspaceId) => set({ activeWorkspaceId: workspaceId }),
+      setActiveWorkspace: async (workspaceId) => {
+        const { data, error } = await SupabaseService.getCurrentUser();
+        if (error || !data.user) return { success: false, error: 'Usuário não autenticado.' };
+        try {
+          set(await authenticatedWorkspaceState(data.user, workspaceId));
+          return { success: true };
+        } catch (workspaceError) {
+          return {
+            success: false,
+            error: workspaceError instanceof Error ? workspaceError.message : 'Workspace indisponível.',
+          };
+        }
+      },
 
-      createNewRealWorkspace: (weddingName, partner1, partner2) => {
-        const newWsId = `ws-real-${Date.now()}`;
-        const userId = get().currentUser?.id || `user-${Date.now()}`;
-
-        const newWorkspace: WeddingWorkspace = {
-          id: newWsId,
+      createNewRealWorkspace: async (weddingName, partner1, partner2) => {
+        if (!get().isAuthenticated || !get().currentUser) {
+          return { success: false, error: 'Faça login para criar um workspace.' };
+        }
+        const creation = await SupabaseService.createWorkspace({
           name: weddingName,
-          slug: weddingName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-          isDemoWorkspace: false,
-          ownerId: userId,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        const newMembership: Membership = {
-          id: `mem-${Date.now()}`,
-          workspaceId: newWsId,
-          userId,
-          userName: get().currentUser?.name || partner1,
-          userEmail: get().currentUser?.email || '',
-          role: 'casal_admin',
-          permissions: {
-            canEditBudget: true,
-            canEditGuests: true,
-            canEditVisualIdentity: true,
-            canEditTasks: true,
-            canEditVendors: true,
-            canEditContracts: true,
-            canManageTeam: true,
-          },
-          invitedAt: new Date().toISOString(),
-          status: 'ativo',
-        };
-
-        // Create COMPLETELY EMPTY collections for real user!
-        const emptyCoupleProfile: CoupleProfile = {
-          workspaceId: newWsId,
-          partner1Name: partner1,
-          partner2Name: partner2,
-          weddingDate: '',
-          weddingTime: '16:00',
-          timezone: 'America/Sao_Paulo',
-          city: '',
-          state: '',
-          weddingType: 'civil_e_religioso',
-          estimatedGuestsCount: 100,
-          totalBudgetPlanned: 80000,
-          financialResponsibles: ['Casal'],
-          style: 'Elegante e Moderno',
-          formalityLevel: 'Semi-Formal',
-          priorities: ['Gastronomia', 'Música'],
-          availableWeeklyHours: 6,
-          customSlug: weddingName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-          status: 'onboarding',
-        };
-
-        const emptyPalette: Palette = {
-          workspaceId: newWsId,
-          colors: [
-            { id: 'c1', name: 'Marsala', hex: '#8B263E', rgb: '139, 38, 62', role: 'principal', appliedTo: [] },
-            { id: 'c2', name: 'Rosa Antigo', hex: '#C48B9F', rgb: '196, 139, 159', role: 'secundaria', appliedTo: [] },
-            { id: 'c3', name: 'Grafite', hex: '#1E293B', rgb: '30, 41, 59', role: 'acento', appliedTo: [] },
-            { id: 'c4', name: 'Verde Sálvia', hex: '#5B7065', rgb: '91, 112, 101', role: 'neutra', appliedTo: [] },
-          ],
-          primaryTypography: 'Playfair Display',
-          secondaryTypography: 'Plus Jakarta Sans',
-        };
-
-        set((state) => ({
-          workspaces: [...state.workspaces.filter((w) => w.id !== newWsId), newWorkspace],
-          memberships: [...state.memberships, newMembership],
-          activeWorkspaceId: newWsId,
-          coupleProfile: emptyCoupleProfile,
-          palette: emptyPalette,
-          guests: [],
-          households: [],
-          tables: [],
-          seats: [],
-          tasks: [],
-          vendors: [],
-          budgetItems: [],
-          payments: [],
-          outfits: [],
-          venues: [],
-          documents: [],
-          timeline: [],
-          decorItems: [],
-          risks: [],
-          gifts: [],
-          photoShots: [],
-          notifications: [],
-          activityLogs: [],
-          moodboard: [],
-          menuItems: [],
-          civilInfo: {
-            workspaceId: newWsId,
-            cartorioName: '',
-            cartorioCity: '',
-            cartorioState: '',
-            regimeDeBens: 'comunhao_parcial',
-            hasPactoAntenupcial: false,
-            processStatus: 'documentos_pendentes',
-            checklists: [
-              { id: 'c1', title: 'Certidões de nascimento atualizadas (90 dias)', completed: false },
-              { id: 'c2', title: 'Comprovantes de residência dos noivos', completed: false },
-              { id: 'c3', title: 'RG e CPF das 2 testemunhas', completed: false },
-            ],
-          },
-          websiteSettings: {
-            title: `Casamento ${partner1} & ${partner2}`,
-            storyText: '',
-            dressCodeNotes: 'Semi-Formal',
-            lodgingNotes: '',
-            isPublished: false,
-            customSlug: weddingName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-          },
-        }));
-
-        return newWsId;
+          partner1,
+          partner2,
+        });
+        if (creation.error || !creation.workspaceId) {
+          return {
+            success: false,
+            error: creation.error?.message || 'Não foi possível criar o workspace.',
+          };
+        }
+        const { data } = await SupabaseService.getCurrentUser();
+        if (data.user) set(await authenticatedWorkspaceState(data.user, creation.workspaceId));
+        return { success: true, workspaceId: creation.workspaceId };
       },
 
-      deleteCurrentWorkspace: () => {
-        const activeId = get().activeWorkspaceId;
-        set((state) => ({
-          workspaces: state.workspaces.filter((w) => w.id !== activeId),
-          activeWorkspaceId: DEMO_WORKSPACE_ID,
-        }));
+      deleteCurrentWorkspace: async () => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) {
+          return { success: false, error: 'Operação não permitida.' };
+        }
+        const deletion = await SupabaseService.deleteWorkspace(get().activeWorkspaceId);
+        if (deletion.error) return { success: false, error: deletion.error.message };
+        const { data } = await SupabaseService.getCurrentUser();
+        if (data.user) set(await authenticatedWorkspaceState(data.user));
+        return { success: true };
       },
 
-      inviteTeamMember: (email, role) => {
-        const activeId = get().activeWorkspaceId;
-        const newMembership: Membership = {
-          id: `mem-${Date.now()}`,
-          workspaceId: activeId,
-          userId: `user-invited-${Date.now()}`,
-          userName: email.split('@')[0],
-          userEmail: email,
-          role,
-          permissions: {
-            canEditBudget: role === 'casal_admin' || role === 'cerimonialista',
-            canEditGuests: role === 'casal_admin' || role === 'cerimonialista' || role === 'familiar',
-            canEditVisualIdentity: role === 'casal_admin',
-            canEditTasks: role !== 'convidado',
-            canEditVendors: role === 'casal_admin' || role === 'cerimonialista',
-            canEditContracts: role === 'casal_admin',
-            canManageTeam: role === 'casal_admin',
-          },
-          invitedAt: new Date().toISOString(),
-          status: 'pendente',
-        };
-        set((state) => ({ memberships: [...state.memberships, newMembership] }));
+      inviteTeamMember: async (email, role) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated || !get().isCurrentUserAdmin()) {
+          return { success: false, error: 'Você não possui permissão para convidar pessoas.' };
+        }
+        const result = await SupabaseService.createInvitation(
+          get().activeWorkspaceId,
+          email,
+          role
+        );
+        return result.error
+          ? { success: false, error: result.error.message }
+          : { success: true };
       },
 
       completeRealOnboarding: (data) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => {
           const updatedProfile = { ...state.coupleProfile, ...data, status: 'active' as const };
           return { coupleProfile: updatedProfile };
@@ -669,66 +771,80 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       // Module CRUD Actions
-      updateCoupleProfile: (data) =>
-        set((state) => ({ coupleProfile: { ...state.coupleProfile, ...data } })),
+      updateCoupleProfile: (data) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ coupleProfile: { ...state.coupleProfile, ...data } }));
+      },
 
-      addTask: (taskData) =>
+      addTask: (taskData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           tasks: [
             ...state.tasks,
             {
               ...taskData,
-              id: `tk-${Date.now()}`,
+              id: newEntityId('tk'),
               workspaceId: state.activeWorkspaceId,
               attachmentsCount: 0,
               commentsCount: 0,
             },
           ],
-        })),
+        }));
+      },
 
-      updateTaskStatus: (id, status) =>
+      updateTaskStatus: (id, status) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           tasks: state.tasks.map((t) => (t.id === id ? { ...t, status } : t)),
-        })),
+        }));
+      },
 
-      deleteTask: (id) =>
-        set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) })),
+      deleteTask: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }));
+      },
 
       addGuest: (guestData) => {
-        if (get().isReadOnlyMode()) return;
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           guests: [
             ...state.guests,
             {
               ...guestData,
-              id: `g-${Date.now()}`,
+              id: newEntityId('g'),
               workspaceId: state.activeWorkspaceId,
-              qrCodeToken: `QR-${Date.now().toString().slice(-6)}`,
+              qrCodeToken: crypto.randomUUID().replaceAll('-', ''),
               checkedIn: false,
             },
           ],
         }));
       },
 
-      updateGuest: (id, data) =>
+      updateGuest: (id, data) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           guests: state.guests.map((g) => (g.id === id ? { ...g, ...data } : g)),
-        })),
+        }));
+      },
 
-      updateGuestRSVP: (guestId, status, notes) =>
+      updateGuestRSVP: (guestId, status, notes) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           guests: state.guests.map((g) =>
             g.id === guestId ? { ...g, status, notes: notes || g.notes } : g
           ),
-        })),
+        }));
+      },
 
-      toggleGuestCheckIn: (guestId) =>
+      toggleGuestCheckIn: (guestId) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           guests: state.guests.map((g) => (g.id === guestId ? { ...g, checkedIn: !g.checkedIn } : g)),
-        })),
+        }));
+      },
 
       importGuestsCSV: (importedList) => {
-        if (get().isReadOnlyMode()) return { added: 0, duplicates: 0 };
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return { added: 0, duplicates: 0 };
         const existing = get().guests;
         let addedCount = 0;
         let dupCount = 0;
@@ -743,7 +859,7 @@ export const useAppStore = create<AppStoreState>()(
           } else {
             addedCount++;
             newItems.push({
-              id: `g-csv-${Date.now()}-${idx}`,
+              id: newEntityId(`g-csv-${idx}`),
               workspaceId: get().activeWorkspaceId,
               fullName: item.fullName || 'Convidado Sem Nome',
               relationship: item.relationship || 'amigos',
@@ -753,7 +869,7 @@ export const useAppStore = create<AppStoreState>()(
               allowedPlusOnes: item.allowedPlusOnes || 0,
               status: item.status || 'pendente',
               eventsPermitted: ['ev1'],
-              qrCodeToken: `QR-CSV-${Date.now().toString().slice(-4)}-${idx}`,
+              qrCodeToken: crypto.randomUUID().replaceAll('-', ''),
               checkedIn: false,
               phone: item.phone,
               email: item.email,
@@ -766,18 +882,18 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       deleteGuest: (id) => {
-        if (get().isReadOnlyMode()) return;
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({ guests: state.guests.filter((g) => g.id !== id) }));
       },
 
       addBudgetItem: (itemData) => {
-        if (get().isReadOnlyMode()) return;
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           budgetItems: [
             ...state.budgetItems,
             {
               ...itemData,
-              id: `bi-${Date.now()}`,
+              id: newEntityId('bi'),
               workspaceId: state.activeWorkspaceId,
               paidAmount: 0,
             },
@@ -785,23 +901,30 @@ export const useAppStore = create<AppStoreState>()(
         }));
       },
 
-      updateBudgetItem: (id, data) =>
+      updateBudgetItem: (id, data) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           budgetItems: state.budgetItems.map((b) => (b.id === id ? { ...b, ...data } : b)),
-        })),
+        }));
+      },
 
-      deleteBudgetItem: (id) =>
-        set((state) => ({ budgetItems: state.budgetItems.filter((b) => b.id !== id) })),
+      deleteBudgetItem: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ budgetItems: state.budgetItems.filter((b) => b.id !== id) }));
+      },
 
-      addPayment: (paymentData) =>
+      addPayment: (paymentData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           payments: [
             ...state.payments,
-            { ...paymentData, id: `p-${Date.now()}`, workspaceId: state.activeWorkspaceId },
+            { ...paymentData, id: newEntityId('p'), workspaceId: state.activeWorkspaceId },
           ],
-        })),
+        }));
+      },
 
-      markPaymentAsPaid: (paymentId) =>
+      markPaymentAsPaid: (paymentId) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => {
           const payment = state.payments.find((p) => p.id === paymentId);
           if (!payment) return state;
@@ -820,25 +943,33 @@ export const useAppStore = create<AppStoreState>()(
           });
 
           return { payments: updatedPayments, budgetItems: updatedBudgetItems };
-        }),
+        });
+      },
 
-      addVendor: (vendorData) =>
+      addVendor: (vendorData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           vendors: [
             ...state.vendors,
-            { ...vendorData, id: `vd-${Date.now()}`, workspaceId: state.activeWorkspaceId },
+            { ...vendorData, id: newEntityId('vd'), workspaceId: state.activeWorkspaceId },
           ],
-        })),
+        }));
+      },
 
-      updateVendorStatus: (id, status) =>
+      updateVendorStatus: (id, status) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           vendors: state.vendors.map((v) => (v.id === id ? { ...v, status } : v)),
-        })),
+        }));
+      },
 
-      deleteVendor: (id) =>
-        set((state) => ({ vendors: state.vendors.filter((v) => v.id !== id) })),
+      deleteVendor: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ vendors: state.vendors.filter((v) => v.id !== id) }));
+      },
 
-      updatePaletteColor: (colorId, hex, name) =>
+      updatePaletteColor: (colorId, hex, name) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           palette: {
             ...state.palette,
@@ -846,100 +977,126 @@ export const useAppStore = create<AppStoreState>()(
               c.id === colorId ? { ...c, hex, name: name || c.name } : c
             ),
           },
-        })),
+        }));
+      },
 
-      addOutfit: (outfitData) =>
+      addOutfit: (outfitData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           outfits: [
             ...state.outfits,
-            { ...outfitData, id: `o-${Date.now()}`, workspaceId: state.activeWorkspaceId },
+            { ...outfitData, id: newEntityId('o'), workspaceId: state.activeWorkspaceId },
           ],
-        })),
+        }));
+      },
 
-      updateOutfitStatus: (id, status) =>
+      updateOutfitStatus: (id, status) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           outfits: state.outfits.map((o) => (o.id === id ? { ...o, status } : o)),
-        })),
+        }));
+      },
 
-      deleteOutfit: (id) =>
-        set((state) => ({ outfits: state.outfits.filter((o) => o.id !== id) })),
+      deleteOutfit: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ outfits: state.outfits.filter((o) => o.id !== id) }));
+      },
 
       assignGuestToSeat: (guestId, tableId, seatId) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           guests: state.guests.map((g) => (g.id === guestId ? { ...g, tableId, seatId } : g)),
         }));
-        SupabaseService.assignGuestToTable(guestId, tableId || null);
       },
 
       addTable: (tableData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         const workspaceId = get().activeWorkspaceId;
-        const newTable = { ...tableData, id: `tbl-${Date.now()}`, workspaceId };
+        const newTable = { ...tableData, id: newEntityId('tbl'), workspaceId };
         set((state) => ({ tables: [...state.tables, newTable] }));
-        SupabaseService.saveTable(newTable);
       },
 
       updateTable: (id, data) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           tables: state.tables.map((t) => (t.id === id ? { ...t, ...data } : t)),
         }));
-        const updatedTable = get().tables.find((t) => t.id === id);
-        if (updatedTable) SupabaseService.saveTable(updatedTable);
       },
 
       deleteTable: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           tables: state.tables.filter((t) => t.id !== id),
           guests: state.guests.map((g) => (g.tableId === id ? { ...g, tableId: undefined, seatId: undefined } : g)),
         }));
-        SupabaseService.deleteTable(id);
       },
 
-      addVenue: (venueData) =>
+      addVenue: (venueData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           venues: [
             ...state.venues,
-            { ...venueData, id: `vn-${Date.now()}`, workspaceId: state.activeWorkspaceId },
+            { ...venueData, id: newEntityId('vn'), workspaceId: state.activeWorkspaceId },
           ],
-        })),
+        }));
+      },
 
-      addDocument: (docData) =>
+      addDocument: (docData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           documents: [
             ...state.documents,
             {
               ...docData,
-              id: `doc-${Date.now()}`,
+              id: newEntityId('doc'),
               workspaceId: state.activeWorkspaceId,
               uploadedAt: new Date().toISOString().split('T')[0],
             },
           ],
-        })),
+        }));
+      },
 
-      deleteDocument: (id) =>
-        set((state) => ({ documents: state.documents.filter((d) => d.id !== id) })),
+      deleteDocument: async (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) {
+          return { success: false, error: 'Operação não permitida.' };
+        }
+        const document = get().documents.find((item) => item.id === id);
+        if (!document) return { success: false, error: 'Documento não encontrado.' };
+        const deletion = await SupabaseService.deleteDocumentFile(document.fileUrl);
+        if (deletion.error) return { success: false, error: deletion.error.message };
+        set((state) => ({ documents: state.documents.filter((d) => d.id !== id) }));
+        return { success: true };
+      },
 
-      addTimelineItem: (itemData) =>
+      addTimelineItem: (itemData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           timeline: [
             ...state.timeline,
-            { ...itemData, id: `tl-${Date.now()}`, workspaceId: state.activeWorkspaceId },
+            { ...itemData, id: newEntityId('tl'), workspaceId: state.activeWorkspaceId },
           ],
-        })),
+        }));
+      },
 
-      addRiskItem: (riskData) =>
+      addRiskItem: (riskData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           risks: [
             ...state.risks,
-            { ...riskData, id: `rk-${Date.now()}`, workspaceId: state.activeWorkspaceId },
+            { ...riskData, id: newEntityId('rk'), workspaceId: state.activeWorkspaceId },
           ],
-        })),
+        }));
+      },
 
-      updateRiskStatus: (id, status) =>
+      updateRiskStatus: (id, status) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           risks: state.risks.map((r) => (r.id === id ? { ...r, status } : r)),
-        })),
+        }));
+      },
 
-      updateCivilChecklist: (itemId, completed) =>
+      updateCivilChecklist: (itemId, completed) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
         set((state) => ({
           civilInfo: {
             ...state.civilInfo,
@@ -947,10 +1104,13 @@ export const useAppStore = create<AppStoreState>()(
               c.id === itemId ? { ...c, completed } : c
             ),
           },
-        })),
+        }));
+      },
 
-      updateWebsiteSettings: (data) =>
-        set((state) => ({ websiteSettings: { ...state.websiteSettings, ...data } })),
+      updateWebsiteSettings: (data) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ websiteSettings: { ...state.websiteSettings, ...data } }));
+      },
 
       // Derived Math Helpers
       getConfirmedGuestsCount: () => {
@@ -986,9 +1146,40 @@ export const useAppStore = create<AppStoreState>()(
           invitesCount: Math.ceil(confirmed / 2),
         };
       },
-    }),
-    {
-      name: 'nosso_grande_dia_store_v3',
-    }
-  )
+    })
 );
+
+let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function snapshotFromState(state: AppStoreState): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  for (const key of SNAPSHOT_KEYS) payload[key] = state[key];
+  return payload;
+}
+
+if (typeof window !== 'undefined') {
+  useAppStore.subscribe((state, previousState) => {
+    if (
+      !state.isAuthenticated ||
+      state.isReadOnlyMode() ||
+      state.activeWorkspaceId === DEMO_WORKSPACE_ID
+    ) {
+      return;
+    }
+
+    const changed = SNAPSHOT_KEYS.some((key) => state[key] !== previousState[key]);
+    if (!changed) return;
+
+    if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(async () => {
+      const currentState = useAppStore.getState();
+      if (!currentState.isAuthenticated || currentState.isReadOnlyMode()) return;
+
+      const { error } = await SupabaseService.saveWorkspaceSnapshot(
+        currentState.activeWorkspaceId,
+        snapshotFromState(currentState)
+      );
+      if (error) console.error('Falha ao salvar o workspace:', error.message);
+    }, 600);
+  });
+}

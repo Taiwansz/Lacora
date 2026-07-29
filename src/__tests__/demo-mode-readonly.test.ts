@@ -67,11 +67,22 @@ describe('Enforcement de Leitura no Modo de Demonstração & Segurança de Atrib
     expect(stateAfter.guests.length).toBe(0);
   });
 
-  it('deve permitir mutações somente quando um workspace real for ativado', () => {
+  it('deve permitir mutações somente com sessão e workspace real', () => {
     const store = useAppStore.getState();
-
-    // Ativa workspace real do usuário
-    const realWsId = store.createNewRealWorkspace('Casamento Real Ana & Pedro', 'Ana', 'Pedro');
+    const realWsId = 'workspace-real';
+    useAppStore.setState({
+      isAuthenticated: true,
+      activeWorkspaceId: realWsId,
+      workspaces: [{
+        id: realWsId,
+        name: 'Casamento Real',
+        slug: 'casamento-real',
+        isDemoWorkspace: false,
+        ownerId: 'real-user',
+        createdAt: '2026-07-28',
+        updatedAt: '2026-07-28',
+      }],
+    });
     expect(store.isReadOnlyMode()).toBe(false);
 
     store.addGuest({

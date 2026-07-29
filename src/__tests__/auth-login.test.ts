@@ -29,29 +29,22 @@ describe('Autenticação, Regras de Senha & Multi-Tenancy', () => {
     expect(res.error).toContain('Termos de Uso');
   });
 
-  it('deve cadastrar usuário com sucesso e criar workspace limpo sem dados fictícios', async () => {
+  it('não deve fabricar usuário quando o Supabase não está configurado', async () => {
     const store = useAppStore.getState();
     const res = await store.signup('Usuário Teste', 'usuario@exemplo.com.br', 'SenhaForte123!', 'SenhaForte123!', true);
 
-    expect(res.success).toBe(true);
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('autenticação não está configurado');
     const state = useAppStore.getState();
-    expect(state.isAuthenticated).toBe(true);
-    expect(state.currentUser?.email).toBe('usuario@exemplo.com.br');
-    expect(state.currentUser?.name).toBe('Usuário Teste');
-
-    // Workspace do usuário real deve estar completamente limpo
-    expect(state.guests.length).toBe(0);
-    expect(state.tasks.length).toBe(0);
-    expect(state.budgetItems.length).toBe(0);
+    expect(state.isAuthenticated).toBe(false);
+    expect(state.currentUser).toBeNull();
   });
 
-  it('deve garantir isolamento multi-tenant entre workspaces distintos', () => {
+  it('deve impedir mutações sem sessão autenticada', () => {
     const store = useAppStore.getState();
-
-    // 1. Criar Workspace A
-    const wsAId = store.createNewRealWorkspace('Casamento A', 'Parceiro A1', 'Parceiro A2');
+    useAppStore.setState({ activeWorkspaceId: 'workspace-real', isAuthenticated: false });
     store.addGuest({
-      fullName: 'Convidado Exclusivo A',
+      fullName: 'Tentativa sem sessão',
       relationship: 'amigos',
       category: 'convidado_geral',
       ageType: 'adulto',
@@ -60,18 +53,34 @@ describe('Autenticação, Regras de Senha & Multi-Tenancy', () => {
       status: 'pendente',
       eventsPermitted: [],
     });
+    expect(useAppStore.getState().guests).toHaveLength(0);
+  });
 
-    const stateA = useAppStore.getState();
-    const guestInA = stateA.guests.find((g) => g.fullName === 'Convidado Exclusivo A');
-    expect(guestInA).toBeDefined();
-    expect(guestInA?.workspaceId).toBe(wsAId);
-
-    // 2. Criar Workspace B
-    const wsBId = store.createNewRealWorkspace('Casamento B', 'Parceiro B1', 'Parceiro B2');
-
-    // No Workspace B, a lista de convidados criada para B deve começar limpa
-    const stateB = useAppStore.getState();
-    expect(stateB.activeWorkspaceId).toBe(wsBId);
-    expect(stateB.guests.length).toBe(0);
+  it('deve vincular novas entidades ao workspace autenticado ativo', () => {
+    useAppStore.setState({
+      activeWorkspaceId: 'workspace-real',
+      isAuthenticated: true,
+      workspaces: [{
+        id: 'workspace-real',
+        name: 'Casamento Real',
+        slug: 'casamento-real',
+        isDemoWorkspace: false,
+        ownerId: 'user-real',
+        createdAt: '2026-07-28',
+        updatedAt: '2026-07-28',
+      }],
+    });
+    const store = useAppStore.getState();
+    store.addGuest({
+      fullName: 'Convidado Válido',
+      relationship: 'amigos',
+      category: 'convidado_geral',
+      ageType: 'adulto',
+      invitationType: 'individual',
+      allowedPlusOnes: 0,
+      status: 'pendente',
+      eventsPermitted: [],
+    });
+    expect(useAppStore.getState().guests[0].workspaceId).toBe('workspace-real');
   });
 });

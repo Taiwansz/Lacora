@@ -3,20 +3,25 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowRight, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { SupabaseService } from '@/lib/supabase-service';
 
 export default function RecuperarSenhaPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    setTimeout(() => {
-      setIsLoading(false);
-      setSubmitted(true);
-    }, 500);
+    setError('');
+    const result = await SupabaseService.requestPasswordReset(email.trim().toLowerCase());
+    setIsLoading(false);
+    if (result.error) {
+      setError(result.error.message);
+      return;
+    }
+    setSubmitted(true);
   };
 
   return (
@@ -51,6 +56,7 @@ export default function RecuperarSenhaPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">{error}</p>}
           <div>
             <label htmlFor="recovery-email" className="block text-xs font-semibold text-charcoal mb-1">
               Seu E-mail Cadastrado

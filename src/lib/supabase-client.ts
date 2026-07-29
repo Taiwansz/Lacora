@@ -1,8 +1,13 @@
 import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseConfig } from './supabase-config';
 
-export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://icqpzzwymejjpdhvjaze.supabase.co';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljcXB6end5bWVqanBkaHZqYXplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzYwNjYsImV4cCI6MjEwMDg1MjA2Nn0.lICTmVCCcFpvSatv0CL0kV5R_1UFNM04TK2Bp7jYDdw';
+let browserClient: SupabaseClient | null = null;
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+export function createClient(): SupabaseClient {
+  if (browserClient) return browserClient;
+
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
+  browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  return browserClient;
 }

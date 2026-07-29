@@ -10,15 +10,26 @@ export default function EquipePage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('cerimonialista');
+  const [feedback, setFeedback] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const isAdmin = isCurrentUserAdmin();
 
-  const handleInvite = (e: React.FormEvent) => {
+  const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail) return;
-    inviteTeamMember(inviteEmail, inviteRole);
+    setSaving(true);
+    setError('');
+    const result = await inviteTeamMember(inviteEmail, inviteRole);
+    setSaving(false);
+    if (!result.success) {
+      setError(result.error || 'Não foi possível criar o convite.');
+      return;
+    }
     setInviteEmail('');
     setShowInviteModal(false);
+    setFeedback('Convite registrado. O envio por e-mail depende da configuração do provedor transacional.');
   };
 
   return (
@@ -48,6 +59,8 @@ export default function EquipePage() {
       </div>
 
       {/* Members Table */}
+      {feedback && <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">{feedback}</p>}
+      {error && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">{error}</p>}
       <div className="bg-surface rounded-3xl border border-border shadow-card overflow-hidden">
         <div className="p-6 border-b border-border">
           <h2 className="font-serif text-base font-bold text-charcoal">Membros com Acesso Autorizado</h2>
@@ -129,9 +142,10 @@ export default function EquipePage() {
               </button>
               <button
                 type="submit"
+                disabled={saving}
                 className="px-5 py-2 text-xs font-bold text-white bg-marsala-500 rounded-xl shadow-card"
               >
-                Enviar Convite
+                {saving ? 'Registrando...' : 'Registrar Convite'}
               </button>
             </div>
           </form>
