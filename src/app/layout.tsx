@@ -3,13 +3,13 @@ import './globals.css';
 import { AppLayout } from '@/components/layout/AppLayout';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://nossograndedia.com.br'),
+  metadataBase: new URL('https://nosso-grande-dia-omega.vercel.app'),
   title: {
-    default: 'Nosso Grande Dia — Gestão Comercial de Casamentos SaaS',
-    template: '%s | Nosso Grande Dia',
+    default: 'Laçora — Do primeiro plano ao grande dia',
+    template: '%s | Laçora',
   },
   description:
-    'Plataforma SaaS inteligente para gestão de casamentos: convidados, orçamento, cronograma, fornecedores, planta de mesas e site público com RSVP.',
+    'Planejamento de casamentos em um só lugar: convidados, orçamento, cronograma, fornecedores, mesas e RSVP.',
   keywords: [
     'gestão de casamentos',
     'plataforma de casamento',
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     'planta de mesas',
     'cronograma dia h',
   ],
-  authors: [{ name: 'Nosso Grande Dia Tecnologia Ltda.' }],
-  creator: 'Nosso Grande Dia Tecnologia Ltda.',
-  publisher: 'Nosso Grande Dia Tecnologia Ltda.',
+  authors: [{ name: 'Laçora' }],
+  creator: 'Laçora',
+  publisher: 'Laçora',
   robots: {
     index: true,
     follow: true,
@@ -29,22 +29,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://nossograndedia.com.br',
-    siteName: 'Nosso Grande Dia',
-    title: 'Nosso Grande Dia — Gestão Comercial de Casamentos SaaS',
+    url: 'https://nosso-grande-dia-omega.vercel.app',
+    siteName: 'Laçora',
+    title: 'Laçora — Do primeiro plano ao grande dia',
     description:
       'Plataforma SaaS inteligente para gestão de casamentos: convidados, orçamento, cronograma e RSVP seguro.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nosso Grande Dia — Gestão Comercial de Casamentos SaaS',
+    title: 'Laçora — Do primeiro plano ao grande dia',
     description:
       'Plataforma SaaS inteligente para gestão de casamentos: convidados, orçamento, cronograma e RSVP seguro.',
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#8B263E',
+  themeColor: '#213D36',
   width: 'device-width',
   initialScale: 1,
 };
