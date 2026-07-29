@@ -25,7 +25,7 @@ export default function ConfiguracoesPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 w-full">
       <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle">
         <h1 className="font-serif text-2xl font-bold text-charcoal flex items-center gap-2">
           <Settings className="w-6 h-6 text-marsala-500" />
