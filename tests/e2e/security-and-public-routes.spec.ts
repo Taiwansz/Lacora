@@ -46,3 +46,13 @@ test('RSVP demonstrativo consulta e envia sem persistir dados', async ({ page })
   await page.getByRole('button', { name: 'Enviar resposta' }).click();
   await expect(page.getByText(/nenhum dado foi armazenado/)).toBeVisible();
 });
+
+test('canal público de contato valida a entrada antes da persistência', async ({ request }) => {
+  const response = await request.post('/api/contact', {
+    data: { name: 'A', email: 'invalido', message: 'curta', company: '' },
+  });
+  expect(response.status()).toBe(400);
+  await expect(response.json()).resolves.toMatchObject({
+    error: expect.stringContaining('Preencha nome'),
+  });
+});
