@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { HelpCircle, Mail, MessageSquare } from 'lucide-react';
+import { HelpCircle, MessageSquare } from 'lucide-react';
 
 export default function SuportePage() {
   return (
@@ -27,14 +27,14 @@ export default function SuportePage() {
         </div>
 
         <div className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-3">
-          <Mail className="w-8 h-8 text-emerald-600" />
-          <h2 className="font-serif text-base font-bold text-charcoal">Atendimento via E-mail</h2>
+          <MessageSquare className="w-8 h-8 text-forest" />
+          <h2 className="font-serif text-base font-bold text-charcoal">Atendimento direto</h2>
           <p className="text-xs text-slate-600">
-            Fale com nossa equipe técnica de suporte comercial. Resposta em até 24 horas úteis.
+            Registre sua solicitação técnica ou comercial pelo formulário de contato.
           </p>
-          <a href="mailto:suporte@nossograndedia.com.br" className="text-xs font-bold text-emerald-600 hover:underline block pt-2">
-            suporte@nossograndedia.com.br
-          </a>
+          <Link href="/contato" className="text-xs font-bold text-forest hover:underline block pt-2">
+            Abrir canal de atendimento &rarr;
+          </Link>
         </div>
       </div>
     </div>

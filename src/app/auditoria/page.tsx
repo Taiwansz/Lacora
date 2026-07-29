@@ -27,7 +27,7 @@ export default function AuditoriaPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 w-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface p-6 rounded-3xl border border-border shadow-subtle">
         <div>
           <span className="text-xs font-semibold text-rose-500 uppercase tracking-wider block">

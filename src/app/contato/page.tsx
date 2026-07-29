@@ -1,15 +1,39 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
+import { MessageSquareText, ShieldCheck, Send, CheckCircle2 } from 'lucide-react';
 
 export default function ContatoPage() {
   const [submitted, setSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({ name: '', email: '', message: '', company: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError('');
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Não foi possível enviar sua mensagem.');
+      }
+      setSubmitted(true);
+      setFormData({ name: '', email: '', message: '', company: '' });
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : 'Não foi possível enviar sua mensagem.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -23,19 +47,15 @@ export default function ContatoPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-4">
-          <h2 className="font-serif text-base font-bold text-charcoal">Canais Oficiais de Atendimento</h2>
+          <h2 className="font-serif text-base font-bold text-charcoal">Fale com a Laçora</h2>
           <div className="space-y-3 text-xs text-slate-600">
             <p className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-marsala-500" />
-              <span>comercial@nossograndedia.com.br</span>
+              <MessageSquareText className="w-4 h-4 text-marsala-500" />
+              <span>Use o formulário para registrar seu interesse ou solicitar atendimento.</span>
             </p>
             <p className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-emerald-600" />
-              <span>(11) 3000-0000 (Central de Atendimento)</span>
-            </p>
-            <p className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-indigo-600" />
-              <span>São Paulo - SP, Brasil</span>
+              <ShieldCheck className="w-4 h-4 text-forest" />
+              <span>Seus dados serão usados somente para responder à solicitação.</span>
             </p>
           </div>
         </div>
@@ -49,6 +69,17 @@ export default function ContatoPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="hidden" aria-hidden="true">
+                <label htmlFor="ct-company">Empresa</label>
+                <input
+                  id="ct-company"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={formData.company}
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                />
+              </div>
               <div>
                 <label htmlFor="ct-name" className="block text-xs font-semibold text-charcoal mb-1">Nome *</label>
                 <input
@@ -87,11 +118,19 @@ export default function ContatoPage() {
                 />
               </div>
 
+              {error && (
+                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+                  {error}
+                </p>
+              )}
+
               <button
                 type="submit"
-                className="w-full py-2.5 bg-marsala-500 hover:bg-marsala-600 text-white font-bold text-xs rounded-xl shadow-card flex items-center justify-center gap-2 transition-colors"
+                disabled={isSubmitting}
+                className="w-full py-2.5 bg-marsala-500 hover:bg-marsala-600 disabled:cursor-wait disabled:opacity-60 text-white font-bold text-xs rounded-xl shadow-card flex items-center justify-center gap-2 transition-colors"
               >
-                <Send className="w-3.5 h-3.5" /> Enviar Mensagem
+                <Send className="w-3.5 h-3.5" />
+                {isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
               </button>
             </form>
           )}

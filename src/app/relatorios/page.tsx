@@ -17,7 +17,7 @@ export default function RelatoriosPage() {
       ['Fornecedores Contratados', `${vendors.filter((v) => v.status === 'contratado').length} empresas`, 'Contratos Ativos'],
       ['Checklist de Tarefas', `${tasks.filter((t) => t.status === 'concluida').length} de ${tasks.length} concluídas`, 'Em Dia'],
     ];
-    generateSimplePDF('Relatório Consolidado Executivo - Nosso Grande Dia', headers, rows);
+    generateSimplePDF('Relatório Consolidado Executivo - Laçora', headers, rows);
   };
 
   const handleExportGuestDataLGPD = () => {

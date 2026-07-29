@@ -8,7 +8,7 @@ export default function NotificacoesPage() {
   const { notifications } = useAppStore();
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 w-full">
       <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle">
         <h1 className="font-serif text-2xl font-bold text-charcoal">Central de Notificações & Alertas</h1>
         <p className="text-xs text-slate-500 mt-1">

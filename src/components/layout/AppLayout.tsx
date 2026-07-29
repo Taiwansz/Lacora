@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { MobileNav } from './MobileNav';
 import Link from 'next/link';
+import { LacoraLogo, LacoraMark } from '@/components/brand/LacoraLogo';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '/';
@@ -68,16 +69,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Marketing Header */}
         <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border px-4 lg:px-8 py-3.5 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl marsala-gradient flex items-center justify-center text-white font-serif font-bold text-sm shadow-subtle">
-              ND
-            </div>
+            <LacoraLogo compact markClassName="h-9 w-9" />
             <div>
-              <span className="font-serif font-bold text-lg text-charcoal block leading-none">
-                Nosso Grande Dia
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
-                Plataforma SaaS de Gestão de Casamentos
-              </span>
+              <span className="brand-wordmark text-2xl text-charcoal block leading-none">Laçora</span>
+              <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Gestão de casamentos</span>
             </div>
           </Link>
 
@@ -120,10 +115,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg marsala-gradient flex items-center justify-center text-white font-serif font-bold text-xs">
-                  ND
-                </div>
-                <span className="font-serif font-bold text-base text-charcoal">Nosso Grande Dia</span>
+                <LacoraMark className="h-8 w-8" />
+                <span className="brand-wordmark text-2xl text-charcoal">Laçora</span>
               </div>
               <p className="text-slate-500 leading-relaxed">
                 A plataforma SaaS inteligente para organização de casamentos. Gestão de convidados, controle orçamentário, cronograma e site público com RSVP.
@@ -158,7 +151,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
-            <p>&copy; {new Date().getFullYear()} Nosso Grande Dia Tecnologia SaaS. Todos os direitos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} Laçora. Todos os direitos reservados.</p>
             <p className="text-[11px]">Segurança e privacidade acompanhadas continuamente.</p>
           </div>
         </footer>
@@ -201,11 +194,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   // 5. Authenticated Private Workspace Layout
   return (
-    <div className="bg-background text-charcoal flex min-h-screen antialiased selection:bg-rose-100 selection:text-marsala-500">
+    <div className="workspace-shell bg-background text-charcoal flex min-h-screen antialiased selection:bg-rose-100 selection:text-marsala-500">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
         <Header />
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="workspace-content flex-1 w-full px-4 py-5 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 lg:py-8">
           <fieldset disabled={isReadOnlyMode} className="contents">
             {children}
           </fieldset>

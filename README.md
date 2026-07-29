@@ -1,4 +1,4 @@
-# Nosso Grande Dia
+# Laçora
 
 Plataforma de gestão de casamentos construída com Next.js, Supabase e Stripe.
 

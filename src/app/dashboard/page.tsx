@@ -18,6 +18,7 @@ import {
   Compass,
   Info
 } from 'lucide-react';
+import { LacoraMark } from '@/components/brand/LacoraLogo';
 
 export default function DashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
@@ -30,9 +31,7 @@ export default function DashboardPage() {
     coupleProfile,
     tasks,
     guests,
-    vendors,
     budgetItems,
-    payments,
     activityLogs,
     workspaces,
     activeWorkspaceId,
@@ -61,9 +60,9 @@ export default function DashboardPage() {
   const buffetEstimates = getBuffetEstimates();
 
   const totalBudgetSpent = budgetItems.reduce((acc, item) => acc + (item.contractedCost || item.estimatedCost || 0), 0);
-  const totalPaid = budgetItems.reduce((acc, item) => acc + item.paidAmount, 0);
-
   const urgentTasks = tasks.filter((t) => t.status !== 'concluida' && t.priority === 'urgente');
+  const completedTasks = tasks.filter((task) => task.status === 'concluida').length;
+  const taskCompletion = tasks.length ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
   // Role Restriction Message if Vendor
   if (currentRole === 'fornecedor') {
@@ -117,35 +116,36 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl marsala-gradient text-white p-6 sm:p-8 shadow-card">
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      {/* Open page introduction — deliberately not wrapped in a floating box */}
+      <div className="relative overflow-hidden border-b border-border pb-7">
+        <LacoraMark className="absolute -right-3 -top-9 h-36 w-36 opacity-[0.08]" />
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-md mb-3 border border-white/20">
-              {coupleProfile.style || 'Estilo do Casamento'}
+            <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-marsala-500">
+              {coupleProfile.style || 'Planejamento do casamento'}
             </span>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold leading-tight">
-              {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}
+            <h1 className="workspace-page-heading font-serif text-3xl sm:text-4xl font-medium text-charcoal leading-tight mt-1">
+              Bem-vindos de volta.
             </h1>
-            <p className="text-xs sm:text-sm text-rose-100 mt-2 max-w-xl">
-              Plataforma de gestão integrada de casamentos com sincronização em tempo real entre convidados, orçamento e cronograma.
+            <p className="text-xs sm:text-sm text-[#756B5E] mt-2 max-w-xl">
+              {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}, aqui está o panorama do grande dia.
             </p>
           </div>
 
-          {/* Countdown Widget with Hydration Safety */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/20 text-center min-w-[200px] shrink-0">
-            <span className="text-[11px] uppercase tracking-wider text-rose-200 block font-semibold">
-              Contagem Regressiva
-            </span>
-            <div className="flex items-baseline justify-center gap-2 mt-1">
-              <span className="font-serif text-4xl sm:text-5xl font-bold text-white">
-                {!isMounted ? '...' : isPast ? 0 : days}
+          <div className="flex items-center gap-4 min-w-[230px] shrink-0 md:justify-end">
+            <div className="h-px w-10 bg-marsala-500" />
+            <div>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-[#756B5E] block font-semibold">
+                Linha do tempo
               </span>
-              <span className="text-xs font-medium text-rose-200">dias</span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="font-serif text-3xl font-medium text-charcoal">
+                  {!isMounted ? '...' : isPast ? 0 : days}
+                </span>
+                <span className="text-xs text-[#756B5E]">dias restantes</span>
+              </div>
+              <p className="text-[10px] text-[#8A7E70] mt-0.5">{coupleProfile.weddingDate || 'Data a definir'}</p>
             </div>
-            <p className="text-[11px] text-rose-100 mt-1">
-              {coupleProfile.weddingDate || 'Data a definir'}
-            </p>
           </div>
         </div>
       </div>
@@ -168,9 +168,9 @@ export default function DashboardPage() {
       )}
 
       {/* KPI Key Indicators Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Card 1: Budget */}
-        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
+        <div className="bg-surface p-5 rounded-2xl border border-border border-t-2 border-t-marsala-500 shadow-subtle">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Orçamento Planejado</span>
             <div className="p-2 rounded-xl bg-rose-50 text-marsala-500">
@@ -188,7 +188,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Card 2: RSVP */}
-        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
+        <div className="bg-surface p-5 rounded-2xl border border-border border-t-2 border-t-sage-500 shadow-subtle">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Confirmados (RSVP)</span>
             <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
@@ -209,7 +209,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Card 3: Cost per Guest (Corrected Logic) */}
-        <div className="bg-surface p-5 rounded-2xl border border-border shadow-subtle">
+        <div className="bg-surface p-5 rounded-2xl border border-border border-t-2 border-t-[#929779] shadow-subtle">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
               <span className="text-xs font-semibold text-slate-500">Custo Previsto / Convidado</span>
@@ -239,13 +239,26 @@ export default function DashboardPage() {
               <CheckSquare className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="font-serif text-2xl font-bold text-charcoal block">
-              {tasks.filter((t) => t.status === 'concluida').length} <span className="text-xs font-sans font-normal text-slate-500">/ {tasks.length}</span>
-            </span>
-            <span className="text-[11px] text-rose-600 font-semibold mt-1 block">
-              {urgentTasks.length} urgentes pendentes
-            </span>
+          <div className="mt-3 flex items-center justify-between gap-4">
+            <div>
+              <span className="font-serif text-2xl font-bold text-charcoal block">
+                {completedTasks} <span className="text-xs font-sans font-normal text-slate-500">/ {tasks.length}</span>
+              </span>
+              <span className="text-[11px] text-rose-600 font-semibold mt-1 block">
+                {urgentTasks.length} urgentes pendentes
+              </span>
+            </div>
+            <div
+              className="h-12 w-12 rounded-full p-[5px]"
+              style={{
+                background: `conic-gradient(#213D36 ${taskCompletion * 3.6}deg, #DED3C2 0deg)`,
+              }}
+              aria-label={`${taskCompletion}% das tarefas concluídas`}
+            >
+              <div className="h-full w-full rounded-full bg-surface flex items-center justify-center text-[10px] font-bold text-charcoal">
+                {taskCompletion}%
+              </div>
+            </div>
           </div>
         </div>
       </div>

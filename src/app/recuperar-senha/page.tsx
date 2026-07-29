@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowRight, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { SupabaseService } from '@/lib/supabase-service';
+import { LacoraLogo } from '@/components/brand/LacoraLogo';
 
 export default function RecuperarSenhaPage() {
   const [email, setEmail] = useState('');
@@ -28,9 +29,7 @@ export default function RecuperarSenhaPage() {
     <div className="bg-surface p-8 rounded-3xl border border-border shadow-floating space-y-6">
       <div className="text-center space-y-2">
         <Link href="/" className="inline-block">
-          <div className="w-12 h-12 rounded-2xl marsala-gradient mx-auto flex items-center justify-center text-white font-serif font-bold text-xl shadow-subtle">
-            ND
-          </div>
+          <LacoraLogo className="justify-center text-left" />
         </Link>
         <h1 className="font-serif text-2xl font-bold text-charcoal">Recuperação de Senha</h1>
         <p className="text-xs text-slate-500">
