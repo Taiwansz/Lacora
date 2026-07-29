@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://nossograndedia.com.br';
+  const baseUrl = 'https://nosso-grande-dia-omega.vercel.app';
 
   return {
     rules: [
