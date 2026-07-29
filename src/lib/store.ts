@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { SupabaseService } from './supabase-service';
+import { getAuthErrorMessage } from './auth-errors';
 import {
   User,
   UserRole,
@@ -540,7 +541,10 @@ export const useAppStore = create<AppStoreState>()(
         await fetch('/api/demo/session', { method: 'DELETE' }).catch(() => undefined);
         const res = await SupabaseService.signInUser(cleanEmail, pass);
         if (res.error || !res.data?.user || !res.data.session) {
-          return { success: false, error: res.error?.message || 'E-mail ou senha incorretos.' };
+          return {
+            success: false,
+            error: getAuthErrorMessage(res.error, 'E-mail ou senha incorretos.'),
+          };
         }
 
         try {
@@ -581,7 +585,10 @@ export const useAppStore = create<AppStoreState>()(
 
         const res = await SupabaseService.signUpUser(cleanEmail, pass, name);
         if (res.error || !res.data?.user) {
-          return { success: false, error: res.error?.message || 'Não foi possível criar a conta.' };
+          return {
+            success: false,
+            error: getAuthErrorMessage(res.error, 'Não foi possível criar a conta.'),
+          };
         }
 
         if (!res.data.session) {
@@ -614,7 +621,10 @@ export const useAppStore = create<AppStoreState>()(
         if (!email) return { success: false, error: 'Usuário não autenticado.' };
         const { error } = await SupabaseService.resendVerification(email);
         return error
-          ? { success: false, error: error.message }
+          ? {
+              success: false,
+              error: getAuthErrorMessage(error, 'Não foi possível reenviar a confirmação.'),
+            }
           : { success: true };
       },
 
