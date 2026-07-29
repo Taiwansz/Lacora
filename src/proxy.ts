@@ -30,6 +30,7 @@ function isPublicPage(pathname: string) {
 function isPublicApi(pathname: string) {
   return (
     pathname === '/api/demo/session' ||
+    pathname === '/api/contact' ||
     pathname.startsWith('/api/rsvp/') ||
     pathname === '/api/webhooks/stripe'
   );
