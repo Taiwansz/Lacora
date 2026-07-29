@@ -58,7 +58,7 @@ export default function AssinaturaPage() {
   const activePlan = SUBSCRIPTION_PLANS[billing?.planId || 'starter'];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <div className="flex flex-col justify-between gap-4 rounded-3xl border border-border bg-surface p-6 shadow-subtle sm:flex-row sm:items-center">
         <div>
           <span className="block text-xs font-semibold uppercase tracking-wider text-rose-500">Faturamento</span>
