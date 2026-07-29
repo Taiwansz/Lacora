@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { getDaysCountdown } from '@/lib/utils';
 import { Bell, LogOut, Lock, User as UserIcon } from 'lucide-react';
+import { navGroups } from './Sidebar';
 
 export const Header: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
@@ -33,6 +36,9 @@ export const Header: React.FC = () => {
   const isPast = countdown.isPast;
 
   const unreadNotificationsCount = notifications.filter((n) => !n.read).length;
+  const activePage =
+    navGroups.flatMap((group) => group.items).find((item) => item.href === pathname)?.label ||
+    'Planejamento';
 
   const roleDisplayMap: Record<string, string> = {
     casal_admin: 'Administrador do Casal',
@@ -49,43 +55,43 @@ export const Header: React.FC = () => {
   return (
     <>
       {isDemo && (
-        <div className="bg-amber-500 text-slate-950 font-semibold text-xs py-1.5 px-4 text-center flex items-center justify-center gap-2 border-b border-amber-600 no-print">
+        <div className="bg-[#D8A15D] text-[#302824] font-semibold text-xs py-1.5 px-4 text-center flex items-center justify-center gap-2 border-b border-[#B78245] no-print">
           <Lock className="w-3.5 h-3.5" />
           <span>Modo de Demonstração (Apenas Leitura) — Nenhuma alteração é salva.</span>
           <Link
             href="/cadastro"
-            className="ml-2 bg-slate-900 text-white px-2.5 py-0.5 rounded text-[11px] font-bold hover:bg-slate-800 transition-colors"
+            className="ml-2 bg-[#213D36] text-white px-2.5 py-0.5 rounded text-[11px] font-bold hover:bg-[#17342E] transition-colors"
           >
             Criar Conta Grátis
           </Link>
         </div>
       )}
-      <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md border-b border-border px-4 lg:px-8 py-3 flex items-center justify-between no-print">
+      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border/70 px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3.5 flex items-center justify-between no-print">
         {/* Couple & Workspace Info */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full marsala-gradient flex items-center justify-center text-white font-serif font-bold text-sm shadow-subtle">
-            {coupleProfile.partner1Name?.[0] || 'A'}
-            {coupleProfile.partner2Name?.[0] || 'T'}
-          </div>
+        <div className="min-w-0">
+          <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-marsala-500">
+            Espaço do casal
+          </span>
           <div>
-            <div className="flex items-center gap-2">
-              <p className="font-serif font-bold text-charcoal text-sm lg:text-base leading-none">
-                {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="font-serif text-charcoal text-lg lg:text-xl leading-none tracking-[-0.02em]">
+                {activePage}
               </p>
               {isDemo && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                  Demonstração Modelo
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#F1D5B9] text-[#7A3A24] border border-[#D8A982]">
+                  DEMONSTRAÇÃO
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {coupleProfile.city || 'Cidade a definir'} • {coupleProfile.weddingDate || 'Data a definir'}
+            <p className="text-[11px] text-[#756B5E] mt-1 truncate">
+              {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}
+              <span className="hidden sm:inline"> · {coupleProfile.city || 'Cidade a definir'}</span>
             </p>
           </div>
         </div>
 
         {/* Days Countdown with Hydration Safety */}
-        <div className="hidden sm:flex items-center bg-surface-muted px-3.5 py-1.5 rounded-full border border-border">
+        <div className="hidden sm:flex items-center bg-surface/70 px-3.5 py-1.5 rounded-full border border-border">
           <span className="text-xs text-charcoal font-medium">
             {!isMounted ? 'Carregando data...' : isPast ? 'Dia do Casamento' : `Faltam ${days} dias`}
           </span>
@@ -94,11 +100,18 @@ export const Header: React.FC = () => {
         {/* Right Controls */}
         <div className="flex items-center gap-3">
           {/* Active Role Badge */}
-          <div className="hidden lg:flex items-center gap-1.5 bg-surface-muted px-2.5 py-1 rounded-lg border border-border text-xs text-slate-600">
-            <span className="text-slate-400">Perfil:</span>
-            <span className="font-semibold text-charcoal uppercase text-[10px] tracking-wider">
-              {roleDisplayMap[currentRole] || currentRole}
-            </span>
+          <div className="hidden lg:flex items-center gap-2 text-xs text-slate-600">
+            <div className="h-8 w-8 rounded-full bg-[#213D36] text-[#F4EBDD] flex items-center justify-center border-2 border-white/60 shadow-subtle">
+              <UserIcon className="h-3.5 w-3.5" />
+            </div>
+            <div className="leading-tight">
+              <span className="font-semibold text-charcoal text-[11px] block">
+                {currentUser?.name || 'Minha conta'}
+              </span>
+              <span className="text-[#817669] text-[9px]">
+                {roleDisplayMap[currentRole] || currentRole}
+              </span>
+            </div>
           </div>
 
           {/* Notifications Icon */}
