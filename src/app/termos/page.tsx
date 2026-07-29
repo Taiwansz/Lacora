@@ -8,7 +8,7 @@ export default function TermosPage() {
       <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle">
         <h1 className="font-serif text-2xl font-bold text-charcoal">Termos de Uso e Serviço</h1>
         <p className="text-xs text-slate-500 mt-1">
-          Condições gerais de prestação de serviços da plataforma SaaS Nosso Grande Dia Tecnologia Ltda. Última atualização: Julho de 2026 (Versão 2.1).
+          Condições gerais de prestação de serviços da plataforma Laçora. Última atualização: Julho de 2026 (Versão 2.1).
         </p>
       </div>
 
@@ -16,7 +16,7 @@ export default function TermosPage() {
         <section className="space-y-2">
           <h2 className="font-serif text-base font-bold text-charcoal">1. Identificação do Operador e Aceitação</h2>
           <p>
-            Esta plataforma SaaS é desenvolvida e mantida pela <strong>Nosso Grande Dia Tecnologia Ltda.</strong>, empresa brasileira com sede em São Paulo - SP. Ao cadastrar-se ou criar um workspace, o usuário concorda expressamente com os presentes Termos de Uso e com nossa Política de Privacidade.
+            Laçora é a marca da plataforma de planejamento de casamentos. A identificação completa do operador, CNPJ, endereço e canal jurídico constará no documento contratual antes do início da comercialização. Ao cadastrar-se ou criar um workspace, o usuário concorda com estes Termos de Uso e com a Política de Privacidade.
           </p>
         </section>
 
@@ -37,10 +37,7 @@ export default function TermosPage() {
         <section className="space-y-2">
           <h2 className="font-serif text-base font-bold text-charcoal">4. Canais de Atendimento e Suporte</h2>
           <p>
-            Dúvidas operacionais ou solicitações de suporte comercial devem ser encaminhadas para{' '}
-            <a href="mailto:suporte@nossograndedia.com.br" className="font-bold text-marsala-500 hover:underline">
-              suporte@nossograndedia.com.br
-            </a>.
+            Dúvidas operacionais ou solicitações comerciais devem ser encaminhadas pelo canal de contato oficial disponível na plataforma.
           </p>
         </section>
       </div>
