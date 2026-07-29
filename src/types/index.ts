@@ -1,4 +1,4 @@
-// Definições de Tipos e Entidades da Plataforma Nosso Grande Dia
+// Definições de tipos e entidades da plataforma Laçora
 
 export type UserRole =
   | 'casal_admin'
