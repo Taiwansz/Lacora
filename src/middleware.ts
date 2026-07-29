@@ -35,6 +35,7 @@ export async function middleware(request: NextRequest) {
   // Check demo mode access via cookie or query param
   const isDemo = request.cookies.get('nosso_grande_dia_demo_mode')?.value === 'true' || request.nextUrl.searchParams.get('demo') === 'true';
 
+  // Explicit Public Routes List (Excludes administrative /site editor which MUST be protected)
   const isPublicRoute =
     pathname === '/' ||
     pathname === '/login' ||
@@ -44,13 +45,20 @@ export async function middleware(request: NextRequest) {
     pathname === '/privacidade' ||
     pathname === '/suporte' ||
     pathname === '/contato' ||
-    pathname.startsWith('/site') ||
-    pathname.startsWith('/rsvp') ||
+    pathname.startsWith('/w/') || // Public wedding website view
+    pathname.startsWith('/rsvp/') || // Public RSVP invitation view
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname.includes('.');
 
-  // Protect private workspace routes
+  // APIs are protected by default, exempting only explicit public endpoints
+  const isPublicApi = pathname === '/api/rsvp' || pathname.startsWith('/api/webhooks');
+  const isProtectedApi = pathname.startsWith('/api') && !isPublicApi;
+
+  if (isProtectedApi && !user && !isDemo) {
+    return NextResponse.json({ error: 'Não autorizado. Autenticação necessária.' }, { status: 401 });
+  }
+
+  // Protect private workspace routes (including /site administrative editor)
   if (!user && !isDemo && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';

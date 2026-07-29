@@ -167,6 +167,7 @@ export interface AppStoreState {
 
   updateCivilChecklist: (itemId: string, completed: boolean) => void;
   updateWebsiteSettings: (data: Partial<AppStoreState['websiteSettings']>) => void;
+  isReadOnlyMode: () => boolean;
 
   // Dynamic Math & Report Helpers
   getConfirmedGuestsCount: () => number;
@@ -661,6 +662,12 @@ export const useAppStore = create<AppStoreState>()(
         return role === 'casal_admin' || role === 'admin_geral';
       },
 
+      isReadOnlyMode: () => {
+        const { workspaces, activeWorkspaceId } = get();
+        const activeWs = workspaces.find((w) => w.id === activeWorkspaceId);
+        return !!activeWs?.isDemoWorkspace || activeWorkspaceId === DEMO_WORKSPACE_ID;
+      },
+
       // Module CRUD Actions
       updateCoupleProfile: (data) =>
         set((state) => ({ coupleProfile: { ...state.coupleProfile, ...data } })),
@@ -687,7 +694,8 @@ export const useAppStore = create<AppStoreState>()(
       deleteTask: (id) =>
         set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) })),
 
-      addGuest: (guestData) =>
+      addGuest: (guestData) => {
+        if (get().isReadOnlyMode()) return;
         set((state) => ({
           guests: [
             ...state.guests,
@@ -699,7 +707,8 @@ export const useAppStore = create<AppStoreState>()(
               checkedIn: false,
             },
           ],
-        })),
+        }));
+      },
 
       updateGuest: (id, data) =>
         set((state) => ({
@@ -719,6 +728,7 @@ export const useAppStore = create<AppStoreState>()(
         })),
 
       importGuestsCSV: (importedList) => {
+        if (get().isReadOnlyMode()) return { added: 0, duplicates: 0 };
         const existing = get().guests;
         let addedCount = 0;
         let dupCount = 0;
@@ -755,10 +765,13 @@ export const useAppStore = create<AppStoreState>()(
         return { added: addedCount, duplicates: dupCount };
       },
 
-      deleteGuest: (id) =>
-        set((state) => ({ guests: state.guests.filter((g) => g.id !== id) })),
+      deleteGuest: (id) => {
+        if (get().isReadOnlyMode()) return;
+        set((state) => ({ guests: state.guests.filter((g) => g.id !== id) }));
+      },
 
-      addBudgetItem: (itemData) =>
+      addBudgetItem: (itemData) => {
+        if (get().isReadOnlyMode()) return;
         set((state) => ({
           budgetItems: [
             ...state.budgetItems,
@@ -769,7 +782,8 @@ export const useAppStore = create<AppStoreState>()(
               paidAmount: 0,
             },
           ],
-        })),
+        }));
+      },
 
       updateBudgetItem: (id, data) =>
         set((state) => ({
