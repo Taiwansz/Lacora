@@ -28,6 +28,8 @@ import {
   Bell,
   CreditCard,
   History,
+  Camera,
+  Send,
   ChevronDown,
   ChevronRight,
   Search
@@ -69,6 +71,7 @@ export const navGroups: NavGroup[] = [
     title: 'Estilo & Design',
     items: [
       { label: 'Identidade Visual', href: '/estilo', icon: Palette },
+      { label: 'Papelaria & Convites', href: '/papelaria', icon: Send },
       { label: 'Vestuário & Beleza', href: '/vestuario', icon: Shirt },
       { label: 'Decoração & Flores', href: '/decoracao', icon: Flower2 },
     ],
@@ -80,6 +83,7 @@ export const navGroups: NavGroup[] = [
       { label: 'Cerimônia & Recepção', href: '/evento', icon: Utensils },
       { label: 'Planta de Mesas', href: '/mesas', icon: Grid },
       { label: 'Cronograma Dia H', href: '/dia-h', icon: Clock },
+      { label: 'Fotos & Momentos', href: '/midia', icon: Camera },
     ],
   },
   {

@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppLayout } from '@/components/layout/AppLayout';
 
+const publicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://nosso-grande-dia-omega.vercel.app'),
+  ...(publicSiteUrl ? { metadataBase: new URL(publicSiteUrl) } : {}),
   title: {
     default: 'Laçora — Do primeiro plano ao grande dia',
     template: '%s | Laçora',
@@ -29,17 +31,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://nosso-grande-dia-omega.vercel.app',
+    ...(publicSiteUrl ? { url: publicSiteUrl } : {}),
     siteName: 'Laçora',
     title: 'Laçora — Do primeiro plano ao grande dia',
     description:
-      'Plataforma SaaS inteligente para gestão de casamentos: convidados, orçamento, cronograma e RSVP seguro.',
+      'Planejamento de casamentos em um só lugar: convidados, orçamento, cronograma, fornecedores, mesas e RSVP.',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Laçora — Do primeiro plano ao grande dia',
     description:
-      'Plataforma SaaS inteligente para gestão de casamentos: convidados, orçamento, cronograma e RSVP seguro.',
+      'Planejamento de casamentos em um só lugar: convidados, orçamento, cronograma, fornecedores, mesas e RSVP.',
   },
 };
 

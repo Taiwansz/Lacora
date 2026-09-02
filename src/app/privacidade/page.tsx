@@ -21,7 +21,7 @@ export default function PrivacidadePage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto py-6">
       <div className="bg-surface p-6 rounded-3xl border border-border shadow-subtle">
-        <h1 className="font-serif text-2xl font-bold text-charcoal">Política de Privacidade & Conformidade LGPD</h1>
+        <h1 className="font-serif text-2xl font-bold text-charcoal">Política de Privacidade & Princípios de LGPD</h1>
         <p className="text-xs text-slate-500 mt-1">
           Transparência na coleta, retenção, portabilidade e proteção de dados pessoais (Lei nº 13.709/2018).
         </p>
@@ -34,7 +34,7 @@ export default function PrivacidadePage() {
             Criptografia & Proteção de Dados
           </h2>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Todos os dados de usuários e convidados (incluindo restrições alimentares e acessibilidade) são protegidos com <strong>criptografia em trânsito (HTTPS / TLS 1.3)</strong> e <strong>criptografia em repouso (AES-256)</strong> nos servidores de banco de dados. Cada conta possui um workspace isolado logicamente com políticas estritas de acesso (Row Level Security).
+            O ambiente publicado deve operar por HTTPS. Cada conta possui um workspace isolado logicamente, com políticas de acesso no banco de dados (Row Level Security) para limitar a leitura e a alteração dos registros autorizados.
           </p>
         </div>
 

@@ -1,62 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { Utensils, Music, CheckCircle2, Heart } from 'lucide-react';
+import { MenuItem } from '@/types';
+import { ChefHat, Plus, Trash2, X } from 'lucide-react';
+
+const courses: Array<{ value: MenuItem['course']; label: string }> = [
+  { value: 'coquetel', label: 'Coquetel' }, { value: 'entrada', label: 'Entrada' }, { value: 'prato_principal', label: 'Prato principal' },
+  { value: 'sobremesa', label: 'Sobremesa' }, { value: 'bolo', label: 'Bolo' }, { value: 'doces', label: 'Doces' },
+  { value: 'lanche_madrugada', label: 'Lanche da madrugada' }, { value: 'menu_infantil', label: 'Menu infantil' }, { value: 'refeicao_fornecedores', label: 'Refeição da equipe' },
+];
+
+const emptyForm: Omit<MenuItem, 'id' | 'workspaceId'> = { course: 'prato_principal', title: '', description: '', isVegetarian: false, isVegan: false, isGlutenFree: false, isNutFree: false, tastingApproved: false };
 
 export default function EventoPage() {
-  const { menuItems } = useAppStore();
+  const { menuItems, addMenuItem, deleteMenuItem } = useAppStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const submit = (event: React.FormEvent) => { event.preventDefault(); if (!form.title.trim()) return; addMenuItem({ ...form, title: form.title.trim() }); setForm(emptyForm); setIsOpen(false); };
 
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface p-6 rounded-3xl border border-border shadow-subtle">
-        <div>
-          <span className="text-xs font-semibold text-rose-500 uppercase tracking-wider block">
-            Protocolo da Festa & Cardápios
-          </span>
-          <h1 className="font-serif text-2xl font-bold text-charcoal mt-1">
-            Planejamento de Gastronomia & Músicas da Cerimônia
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Degustações aprovadas, opções vegetarianas, menu infantil e refeições da equipe.
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-4">
-        <h2 className="font-serif text-lg font-bold text-charcoal flex items-center gap-2">
-          <Utensils className="w-5 h-5 text-marsala-500" />
-          Cardápio Oficial Aprovado na Degustação
-        </h2>
-
-        <div className="space-y-3">
-          {menuItems.map((item) => (
-            <div key={item.id} className="p-4 rounded-2xl border border-border bg-surface-muted/40 flex items-start justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500 block">{item.course}</span>
-                <h3 className="text-sm font-bold text-charcoal mt-0.5">{item.title}</h3>
-                <p className="text-xs text-slate-500 mt-1">{item.description}</p>
-
-                <div className="flex items-center gap-2 mt-2">
-                  {item.isVegetarian && (
-                    <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                      Vegetariano
-                    </span>
-                  )}
-                  {item.isGlutenFree && (
-                    <span className="text-[9px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Sem Glúten
-                    </span>
-                  )}
-                </div>
-              </div>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full shrink-0">
-                Aprovado na Degustação
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="space-y-6">
+    <div className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between"><div><span className="brand-kicker">Gastronomia & experiência</span><h1 className="workspace-page-heading mt-1 font-serif text-3xl font-medium text-charcoal">Cardápio do evento</h1><p className="mt-2 text-sm text-[#756B5E]">Registre pratos, restrições, degustações e refeições especiais.</p></div><button type="button" onClick={() => setIsOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-marsala-500 px-4 py-2.5 text-xs font-bold text-white"><Plus className="h-4 w-4" />Adicionar prato</button></div>
+    <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-border bg-surface p-4"><span className="text-[11px] text-[#756B5E]">Itens no menu</span><strong className="mt-1 block font-serif text-2xl font-medium">{menuItems.length}</strong></div><div className="rounded-2xl border border-border bg-surface p-4"><span className="text-[11px] text-[#756B5E]">Aprovados na degustação</span><strong className="mt-1 block font-serif text-2xl font-medium text-sage-500">{menuItems.filter((item) => item.tastingApproved).length}</strong></div><div className="rounded-2xl border border-border bg-surface p-4"><span className="text-[11px] text-[#756B5E]">Opções vegetarianas/veganas</span><strong className="mt-1 block font-serif text-2xl font-medium text-marsala-500">{menuItems.filter((item) => item.isVegetarian || item.isVegan).length}</strong></div></div>
+    {menuItems.length === 0 ? <div className="rounded-3xl border border-dashed border-border bg-surface p-12 text-center"><ChefHat className="mx-auto h-10 w-10 text-marsala-500" /><h2 className="mt-3 font-serif text-xl font-medium">O cardápio ainda está em branco</h2><p className="mt-1 text-xs text-[#756B5E]">Adicione as opções discutidas com o buffet.</p></div> : <div className="grid gap-4 lg:grid-cols-2">{courses.map((course) => { const items = menuItems.filter((item) => item.course === course.value); if (!items.length) return null; return <section key={course.value} className="overflow-hidden rounded-3xl border border-border bg-surface"><div className="border-b border-border bg-surface-muted/60 px-5 py-3"><h2 className="font-serif text-lg font-medium">{course.label}</h2></div><div className="divide-y divide-border">{items.map((item) => <article key={item.id} className="p-5"><div className="flex items-start justify-between gap-3"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-serif text-xl font-medium text-charcoal">{item.title}</h3>{item.tastingApproved && <span className="rounded-full bg-emerald-100 px-2 py-1 text-[9px] font-bold text-emerald-800">Aprovado</span>}</div><p className="mt-2 text-xs leading-5 text-[#655B50]">{item.description}</p></div><button type="button" onClick={() => deleteMenuItem(item.id)} aria-label={`Excluir ${item.title}`} className="rounded-lg p-2 text-[#8A7E70] hover:bg-rose-50 hover:text-marsala-500"><Trash2 className="h-4 w-4" /></button></div><div className="mt-3 flex flex-wrap gap-1.5">{item.isVegetarian && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-semibold text-emerald-700">Vegetariano</span>}{item.isVegan && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-semibold text-emerald-700">Vegano</span>}{item.isGlutenFree && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[9px] font-semibold text-amber-700">Sem glúten</span>}{item.isNutFree && <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[9px] font-semibold text-blue-700">Sem castanhas</span>}</div></article>)}</div></section>; })}</div>}
+    {isOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#102D28]/60 p-4 backdrop-blur-sm"><form onSubmit={submit} className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-surface p-6 shadow-2xl"><div className="mb-5 flex items-center justify-between"><div className="flex items-center gap-2"><ChefHat className="h-5 w-5 text-marsala-500" /><h2 className="font-serif text-xl font-medium">Novo item do cardápio</h2></div><button type="button" onClick={() => setIsOpen(false)} className="rounded-lg p-1.5 hover:bg-surface-muted"><X className="h-4 w-4" /></button></div><div className="space-y-4"><label className="block"><span className="mb-1 block text-xs font-semibold">Nome *</span><input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs" /></label><label className="block"><span className="mb-1 block text-xs font-semibold">Etapa</span><select value={form.course} onChange={(event) => setForm({ ...form, course: event.target.value as MenuItem['course'] })} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs">{courses.map((course) => <option key={course.value} value={course.value}>{course.label}</option>)}</select></label><label className="block"><span className="mb-1 block text-xs font-semibold">Descrição</span><textarea rows={3} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="w-full resize-none rounded-xl border border-border px-3 py-2.5 text-xs" /></label><div className="grid gap-2 sm:grid-cols-2">{([['isVegetarian','Vegetariano'],['isVegan','Vegano'],['isGlutenFree','Sem glúten'],['isNutFree','Sem castanhas'],['tastingApproved','Aprovado na degustação']] as const).map(([key,label]) => <label key={key} className="flex items-center gap-2 rounded-xl bg-surface-muted p-3 text-xs"><input type="checkbox" checked={form[key]} onChange={(event) => setForm({ ...form, [key]: event.target.checked })} className="accent-[#B86645]" />{label}</label>)}</div></div><div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setIsOpen(false)} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold">Cancelar</button><button type="submit" className="rounded-xl bg-marsala-500 px-5 py-2.5 text-xs font-bold text-white">Adicionar</button></div></form></div>}
+  </div>;
 }

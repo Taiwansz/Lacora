@@ -1,40 +1,31 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { Flower2, Plus } from 'lucide-react';
+import { DecorItem } from '@/types';
+import { Flower2, Plus, Trash2, X } from 'lucide-react';
+import { formatBRL } from '@/lib/utils';
+
+const sections: Array<{ value: DecorItem['section']; label: string }> = [
+  { value: 'entrada', label: 'Entrada' }, { value: 'altar', label: 'Altar' }, { value: 'corredor', label: 'Corredor' },
+  { value: 'cerimonia', label: 'Cerimônia' }, { value: 'recepcao', label: 'Recepção' }, { value: 'lounge', label: 'Lounge' },
+  { value: 'mesa_casal', label: 'Mesa do casal' }, { value: 'mesa_doces', label: 'Mesa de doces' }, { value: 'bar', label: 'Bar' }, { value: 'banheiros', label: 'Banheiros' },
+];
+
+const emptyForm: Omit<DecorItem, 'id' | 'workspaceId'> = { section: 'altar', title: '', referenceColor: '#B86645', floralsOrMaterials: '', quantity: 1, rentalOrPurchase: 'aluguel', cost: 0, vendorId: '', teardownPlan: '' };
 
 export default function DecoracaoPage() {
-  const { decorItems } = useAppStore();
+  const { decorItems, addDecorItem, deleteDecorItem } = useAppStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const total = decorItems.reduce((sum, item) => sum + item.cost, 0);
 
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface p-6 rounded-3xl border border-border shadow-subtle">
-        <div>
-          <span className="text-xs font-semibold text-rose-500 uppercase tracking-wider block">
-            Projeto Cenográfico & Floral
-          </span>
-          <h1 className="font-serif text-2xl font-bold text-charcoal mt-1">
-            Gestão de Decoração por Setor
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Arranjos de altar, mesa dos noivos, lounge, bouquet e espécies florais.
-          </p>
-        </div>
-      </div>
+  const submit = (event: React.FormEvent) => { event.preventDefault(); if (!form.title.trim()) return; addDecorItem({ ...form, title: form.title.trim(), quantity: Math.max(1, form.quantity), cost: Math.max(0, form.cost) }); setForm(emptyForm); setIsOpen(false); };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {decorItems.map((item) => (
-          <div key={item.id} className="bg-surface p-6 rounded-3xl border border-border shadow-card space-y-2">
-            <span className="text-[10px] font-bold uppercase text-marsala-500 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 inline-block">
-              Setor: {item.section}
-            </span>
-            <h3 className="font-serif text-base font-bold text-charcoal">{item.title}</h3>
-            <p className="text-xs text-slate-600"><span className="font-semibold">Espécies / Materiais:</span> {item.floralsOrMaterials}</p>
-            <p className="text-xs text-slate-500"><span className="font-semibold">Quantidade:</span> {item.quantity} conjunto(s)</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <div className="space-y-6">
+    <div className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between"><div><span className="brand-kicker">Projeto cenográfico & floral</span><h1 className="workspace-page-heading mt-1 font-serif text-3xl font-medium text-charcoal">Decoração por ambiente</h1><p className="mt-2 text-sm text-[#756B5E]">Materiais, quantidades, responsáveis e desmontagem por setor.</p></div><button type="button" onClick={() => setIsOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-marsala-500 px-4 py-2.5 text-xs font-bold text-white"><Plus className="h-4 w-4" />Novo item</button></div>
+    <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-border bg-surface p-4"><span className="text-[11px] text-[#756B5E]">Ambientes</span><strong className="mt-1 block font-serif text-2xl font-medium">{new Set(decorItems.map((item) => item.section)).size}</strong></div><div className="rounded-2xl border border-border bg-surface p-4"><span className="text-[11px] text-[#756B5E]">Itens planejados</span><strong className="mt-1 block font-serif text-2xl font-medium">{decorItems.reduce((sum, item) => sum + item.quantity, 0)}</strong></div><div className="rounded-2xl border border-border bg-surface p-4"><span className="text-[11px] text-[#756B5E]">Custo mapeado</span><strong className="mt-1 block font-serif text-2xl font-medium text-marsala-500">{formatBRL(total)}</strong></div></div>
+    {decorItems.length === 0 ? <div className="rounded-3xl border border-dashed border-border bg-surface p-12 text-center"><Flower2 className="mx-auto h-10 w-10 text-marsala-500" /><h2 className="mt-3 font-serif text-xl font-medium">Nenhum ambiente planejado</h2><p className="mt-1 text-xs text-[#756B5E]">Cadastre o primeiro item do projeto cenográfico.</p></div> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{decorItems.map((item) => <article key={item.id} className="relative overflow-hidden rounded-3xl border border-border bg-surface p-5 shadow-subtle"><div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: item.referenceColor }} /><div className="flex items-start justify-between gap-3"><div><span className="text-[9px] font-bold uppercase tracking-[.14em] text-marsala-500">{sections.find((section) => section.value === item.section)?.label}</span><h2 className="mt-1 font-serif text-xl font-medium text-charcoal">{item.title}</h2></div><button type="button" onClick={() => deleteDecorItem(item.id)} aria-label={`Excluir ${item.title}`} className="rounded-lg p-2 text-[#8A7E70] hover:bg-rose-50 hover:text-marsala-500"><Trash2 className="h-4 w-4" /></button></div><p className="mt-4 text-xs leading-5 text-[#655B50]">{item.floralsOrMaterials || 'Materiais a definir'}</p><div className="mt-4 grid grid-cols-2 gap-2 text-[10px]"><div className="rounded-xl bg-surface-muted p-3"><span className="block text-[#756B5E]">Quantidade</span><strong className="mt-1 block text-charcoal">{item.quantity}</strong></div><div className="rounded-xl bg-surface-muted p-3"><span className="block text-[#756B5E]">{item.rentalOrPurchase === 'aluguel' ? 'Aluguel' : 'Compra'}</span><strong className="mt-1 block text-charcoal">{formatBRL(item.cost)}</strong></div></div>{item.teardownPlan && <p className="mt-3 border-t border-border pt-3 text-[10px] leading-4 text-[#756B5E]"><strong>Desmontagem:</strong> {item.teardownPlan}</p>}</article>)}</div>}
+    {isOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#102D28]/60 p-4 backdrop-blur-sm"><form onSubmit={submit} className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-surface p-6 shadow-2xl"><div className="mb-5 flex items-center justify-between"><h2 className="font-serif text-xl font-medium">Novo item de decoração</h2><button type="button" onClick={() => setIsOpen(false)} className="rounded-lg p-1.5 hover:bg-surface-muted"><X className="h-4 w-4" /></button></div><div className="space-y-4"><label className="block"><span className="mb-1 block text-xs font-semibold">Nome *</span><input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs" /></label><div className="grid gap-4 sm:grid-cols-2"><label><span className="mb-1 block text-xs font-semibold">Ambiente</span><select value={form.section} onChange={(event) => setForm({ ...form, section: event.target.value as DecorItem['section'] })} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs">{sections.map((section) => <option key={section.value} value={section.value}>{section.label}</option>)}</select></label><label><span className="mb-1 block text-xs font-semibold">Cor de referência</span><input type="color" value={form.referenceColor} onChange={(event) => setForm({ ...form, referenceColor: event.target.value })} className="h-[38px] w-full rounded-xl border border-border" /></label></div><label className="block"><span className="mb-1 block text-xs font-semibold">Flores e materiais</span><input value={form.floralsOrMaterials} onChange={(event) => setForm({ ...form, floralsOrMaterials: event.target.value })} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs" /></label><div className="grid gap-4 sm:grid-cols-3"><label><span className="mb-1 block text-xs font-semibold">Quantidade</span><input type="number" min="1" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs" /></label><label><span className="mb-1 block text-xs font-semibold">Aquisição</span><select value={form.rentalOrPurchase} onChange={(event) => setForm({ ...form, rentalOrPurchase: event.target.value as DecorItem['rentalOrPurchase'] })} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs"><option value="aluguel">Aluguel</option><option value="compra">Compra</option></select></label><label><span className="mb-1 block text-xs font-semibold">Custo</span><input type="number" min="0" step="0.01" value={form.cost} onChange={(event) => setForm({ ...form, cost: Number(event.target.value) })} className="w-full rounded-xl border border-border px-3 py-2.5 text-xs" /></label></div><label className="block"><span className="mb-1 block text-xs font-semibold">Plano de desmontagem</span><textarea rows={3} value={form.teardownPlan} onChange={(event) => setForm({ ...form, teardownPlan: event.target.value })} className="w-full resize-none rounded-xl border border-border px-3 py-2.5 text-xs" /></label></div><div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setIsOpen(false)} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold">Cancelar</button><button type="submit" className="rounded-xl bg-marsala-500 px-5 py-2.5 text-xs font-bold text-white">Adicionar</button></div></form></div>}
+  </div>;
 }

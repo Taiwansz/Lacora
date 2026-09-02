@@ -40,7 +40,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isPrivateWorkspaceRoute) {
-      setSessionReady(true);
       return;
     }
 
@@ -67,43 +66,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex flex-col bg-background text-charcoal selection:bg-rose-100 selection:text-marsala-500">
         {/* Marketing Header */}
-        <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-border px-4 lg:px-8 py-3.5 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <LacoraLogo compact markClassName="h-9 w-9" />
-            <div>
-              <span className="brand-wordmark text-2xl text-charcoal block leading-none">Laçora</span>
-              <span className="text-[10px] text-slate-400 font-medium block mt-0.5">Gestão de casamentos</span>
+        <header className="sticky top-0 z-40 border-b border-border bg-[#F4EBDD]/90 px-4 py-3.5 backdrop-blur-xl lg:px-8">
+          <div className="mx-auto flex max-w-7xl items-center justify-between">
+            <Link href="/" aria-label="Laçora — página inicial">
+              <LacoraLogo className="gap-2.5 [&>div]:hidden sm:[&>div]:block" markClassName="h-9 w-9" />
+            </Link>
+
+            <nav className="hidden items-center gap-7 text-xs font-semibold text-[#655B50] md:flex" aria-label="Navegação principal">
+              <Link href="/#recursos" className="transition-colors hover:text-marsala-500">Produto</Link>
+              <Link href="/#precos" className="transition-colors hover:text-marsala-500">Planos</Link>
+              <Link href="/#faq" className="transition-colors hover:text-marsala-500">Dúvidas</Link>
+              <Link href="/privacidade" className="transition-colors hover:text-marsala-500">Privacidade</Link>
+            </nav>
+
+            <div className="flex items-center gap-1 sm:gap-3">
+              <Link href="/login" className="px-3 py-2 text-xs font-semibold text-charcoal transition-colors hover:text-marsala-500 sm:px-4">Entrar</Link>
+              <Link href="/cadastro" className="brand-button-primary px-3.5 py-2 text-xs font-bold sm:px-4">Criar conta</Link>
             </div>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600">
-            <Link href="/#recursos" className="hover:text-marsala-500 transition-colors">
-              Recursos
-            </Link>
-            <Link href="/#precos" className="hover:text-marsala-500 transition-colors">
-              Planos & Preços
-            </Link>
-            <Link href="/#faq" className="hover:text-marsala-500 transition-colors">
-              Dúvidas Frequentes
-            </Link>
-            <Link href="/privacidade" className="hover:text-marsala-500 transition-colors">
-              Privacidade & Segurança
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-xs font-semibold text-charcoal hover:text-marsala-500 transition-colors"
-            >
-              Entrar
-            </Link>
-            <Link
-              href="/cadastro"
-              className="px-4 py-2 bg-marsala-500 hover:bg-marsala-600 text-white font-bold text-xs rounded-xl shadow-card transition-colors"
-            >
-              Criar Conta Grátis
-            </Link>
           </div>
         </header>
 
@@ -111,48 +90,48 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1">{children}</main>
 
         {/* Marketing Footer */}
-        <footer className="bg-surface border-t border-border py-12 px-4 lg:px-8 text-xs text-slate-500">
+        <footer className="border-t border-border bg-[#183A33] px-4 py-14 text-xs text-[#CFC5B5] lg:px-8">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <LacoraMark className="h-8 w-8" />
-                <span className="brand-wordmark text-2xl text-charcoal">Laçora</span>
+                <LacoraMark className="h-9 w-9" inverted />
+                <span className="brand-wordmark text-2xl text-[#F4EBDD]">Laçora</span>
               </div>
-              <p className="text-slate-500 leading-relaxed">
-                A plataforma SaaS inteligente para organização de casamentos. Gestão de convidados, controle orçamentário, cronograma e site público com RSVP.
+              <p className="leading-relaxed text-[#BDB2A1]">
+                Do primeiro plano ao grande dia: decisões, pessoas e prazos no mesmo lugar.
               </p>
             </div>
 
             <div>
-              <h4 className="font-bold text-charcoal mb-3 uppercase tracking-wider text-[11px]">Produto</h4>
+              <h4 className="mb-3 text-[10px] font-bold uppercase tracking-[.16em] text-[#E5A27A]">Produto</h4>
               <ul className="space-y-2">
-                <li><Link href="/#recursos" className="hover:text-marsala-500">Recursos Mapeados</Link></li>
-                <li><Link href="/#precos" className="hover:text-marsala-500">Planos Comerciais</Link></li>
-                <li><Link href="/login" className="hover:text-marsala-500">Modo de Demonstração</Link></li>
+                <li><Link href="/#recursos" className="hover:text-white">Conhecer a plataforma</Link></li>
+                <li><Link href="/#precos" className="hover:text-white">Planos</Link></li>
+                <li><Link href="/login" className="hover:text-white">Demonstração</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-charcoal mb-3 uppercase tracking-wider text-[11px]">Legal & Segurança</h4>
+              <h4 className="mb-3 text-[10px] font-bold uppercase tracking-[.16em] text-[#E5A27A]">Informações</h4>
               <ul className="space-y-2">
-                <li><Link href="/termos" className="hover:text-marsala-500">Termos de Uso</Link></li>
-                <li><Link href="/privacidade" className="hover:text-marsala-500">Política de Privacidade</Link></li>
-                <li><Link href="/suporte" className="hover:text-marsala-500">Central de Ajuda</Link></li>
-                <li><Link href="/contato" className="hover:text-marsala-500">Contato Comercial</Link></li>
+                <li><Link href="/termos" className="hover:text-white">Termos de uso</Link></li>
+                <li><Link href="/privacidade" className="hover:text-white">Privacidade</Link></li>
+                <li><Link href="/suporte" className="hover:text-white">Central de ajuda</Link></li>
+                <li><Link href="/contato" className="hover:text-white">Contato</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-charcoal mb-3 uppercase tracking-wider text-[11px]">Compromisso</h4>
-              <p className="text-slate-500 leading-relaxed">
-                Controles de acesso, criptografia em trânsito e recursos desenvolvidos com privacidade desde a concepção.
+              <h4 className="mb-3 text-[10px] font-bold uppercase tracking-[.16em] text-[#E5A27A]">Princípio</h4>
+              <p className="leading-relaxed text-[#BDB2A1]">
+                Clareza para planejar, privacidade para compartilhar e calma para viver o processo.
               </p>
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+          <div className="mx-auto mt-9 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-white/10 pt-7 text-center text-[10px] text-[#9F9585] sm:flex-row sm:text-left">
             <p>&copy; {new Date().getFullYear()} Laçora. Todos os direitos reservados.</p>
-            <p className="text-[11px]">Segurança e privacidade acompanhadas continuamente.</p>
+            <p>Planejamento de casamentos, do começo ao depois.</p>
           </div>
         </footer>
       </div>
@@ -162,8 +141,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   // 2. Auth Layout (Login, Registration, Password Recovery)
   if (isAuthRoute) {
     return (
-      <div className="min-h-screen bg-background text-charcoal flex flex-col justify-center items-center p-4 selection:bg-rose-100 selection:text-marsala-500">
-        <div className="w-full max-w-md">
+      <div className="relative min-h-screen overflow-hidden bg-[#EDE2D2] text-charcoal flex flex-col justify-center items-center p-4 selection:bg-rose-100 selection:text-marsala-500">
+        <div className="absolute inset-x-0 top-0 h-2/5 bg-[url('/brand/lacora-ribbon-pattern.svg')] bg-cover bg-center opacity-100" />
+        <div className="relative w-full max-w-md">
           {children}
         </div>
       </div>

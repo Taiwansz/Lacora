@@ -28,6 +28,7 @@ import {
   MoodboardItem,
   DecorItem,
   MenuItem,
+  StationeryItem,
   RiskItem,
   CivilWeddingInfo
 } from '../types';
@@ -84,6 +85,7 @@ export interface AppStoreState {
   moodboard: MoodboardItem[];
   decorItems: DecorItem[];
   menuItems: MenuItem[];
+  stationeryItems: StationeryItem[];
   risks: RiskItem[];
   civilInfo: CivilWeddingInfo;
 
@@ -163,6 +165,19 @@ export interface AppStoreState {
   updateTable: (id: string, data: Partial<Table>) => void;
   deleteTable: (id: string) => void;
   addVenue: (venue: Omit<Venue, 'id' | 'workspaceId'>) => void;
+  deleteVenue: (id: string) => void;
+  addDecorItem: (item: Omit<DecorItem, 'id' | 'workspaceId'>) => void;
+  deleteDecorItem: (id: string) => void;
+  addMenuItem: (item: Omit<MenuItem, 'id' | 'workspaceId'>) => void;
+  deleteMenuItem: (id: string) => void;
+  addStationeryItem: (item: Omit<StationeryItem, 'id' | 'workspaceId'>) => void;
+  updateStationeryItemStatus: (id: string, status: StationeryItem['status']) => void;
+  deleteStationeryItem: (id: string) => void;
+  addPhotoShot: (shot: Omit<PhotoShot, 'id' | 'workspaceId'>) => void;
+  togglePhotoShot: (id: string) => void;
+  deletePhotoShot: (id: string) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
   addDocument: (doc: Omit<Document, 'id' | 'workspaceId' | 'uploadedAt'>) => void;
   deleteDocument: (id: string) => Promise<{ success: boolean; error?: string }>;
 
@@ -231,6 +246,7 @@ const SNAPSHOT_KEYS = [
   'moodboard',
   'decorItems',
   'menuItems',
+  'stationeryItems',
   'risks',
   'civilInfo',
   'websiteSettings',
@@ -289,6 +305,7 @@ function emptyWorkspaceState(
     activityLogs: [],
     moodboard: [],
     menuItems: [],
+    stationeryItems: [],
     civilInfo: {
       workspaceId,
       cartorioName: '',
@@ -472,6 +489,37 @@ export const useAppStore = create<AppStoreState>()(
           isGlutenFree: true,
           isNutFree: true,
           tastingApproved: true,
+        },
+      ],
+      stationeryItems: [
+        {
+          id: 'sti1',
+          workspaceId: DEMO_WORKSPACE_ID,
+          title: 'Save the date digital',
+          category: 'save_the_date',
+          status: 'entregue',
+          quantity: 1,
+          dueDate: '2026-04-15',
+          vendorName: 'Estúdio de papelaria',
+        },
+        {
+          id: 'sti2',
+          workspaceId: DEMO_WORKSPACE_ID,
+          title: 'Convite principal em papel algodão',
+          category: 'convite',
+          status: 'producao',
+          quantity: 90,
+          dueDate: '2026-09-10',
+          vendorName: 'Ateliê gráfico',
+        },
+        {
+          id: 'sti3',
+          workspaceId: DEMO_WORKSPACE_ID,
+          title: 'Manual dos padrinhos',
+          category: 'padrinhos',
+          status: 'aprovacao',
+          quantity: 12,
+          dueDate: '2026-08-20',
         },
       ],
       risks: [
@@ -678,6 +726,7 @@ export const useAppStore = create<AppStoreState>()(
           households: demoHouseholds,
           guests: demoGuests,
           tables: demoTables,
+          seats: [],
           tasks: demoTasks,
           vendors: demoVendors,
           budgetItems: demoBudgetItems,
@@ -688,6 +737,29 @@ export const useAppStore = create<AppStoreState>()(
           photoShots: demoPhotoShots,
           notifications: demoNotifications,
           activityLogs: demoActivityLog,
+          moodboard: [],
+          decorItems: [],
+          menuItems: [],
+          risks: [],
+          stationeryItems: [],
+          civilInfo: {
+            workspaceId: DEMO_WORKSPACE_ID,
+            cartorioName: '',
+            cartorioCity: '',
+            cartorioState: '',
+            regimeDeBens: 'comunhao_parcial',
+            hasPactoAntenupcial: false,
+            processStatus: 'documentos_pendentes',
+            checklists: [],
+          },
+          websiteSettings: {
+            title: 'Casamento Alex & Taylor',
+            storyText: 'Nos conhecemos em um evento de trabalho e decidimos compartilhar a vida juntos.',
+            dressCodeNotes: 'Traje passeio completo / semi-formal',
+            lodgingNotes: 'Indicações de hospedagem e transporte na região.',
+            isPublished: true,
+            customSlug: 'alex-taylor-demo',
+          },
         });
         return { success: true };
       },
@@ -1048,6 +1120,99 @@ export const useAppStore = create<AppStoreState>()(
             ...state.venues,
             { ...venueData, id: newEntityId('vn'), workspaceId: state.activeWorkspaceId },
           ],
+        }));
+      },
+
+      deleteVenue: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ venues: state.venues.filter((venue) => venue.id !== id) }));
+      },
+
+      addDecorItem: (itemData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({
+          decorItems: [
+            ...state.decorItems,
+            { ...itemData, id: newEntityId('decor'), workspaceId: state.activeWorkspaceId },
+          ],
+        }));
+      },
+
+      deleteDecorItem: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ decorItems: state.decorItems.filter((item) => item.id !== id) }));
+      },
+
+      addMenuItem: (itemData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({
+          menuItems: [
+            ...state.menuItems,
+            { ...itemData, id: newEntityId('menu'), workspaceId: state.activeWorkspaceId },
+          ],
+        }));
+      },
+
+      deleteMenuItem: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ menuItems: state.menuItems.filter((item) => item.id !== id) }));
+      },
+
+      addStationeryItem: (itemData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({
+          stationeryItems: [
+            ...state.stationeryItems,
+            { ...itemData, id: newEntityId('stationery'), workspaceId: state.activeWorkspaceId },
+          ],
+        }));
+      },
+
+      updateStationeryItemStatus: (id, status) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({
+          stationeryItems: state.stationeryItems.map((item) => item.id === id ? { ...item, status } : item),
+        }));
+      },
+
+      deleteStationeryItem: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ stationeryItems: state.stationeryItems.filter((item) => item.id !== id) }));
+      },
+
+      addPhotoShot: (shotData) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({
+          photoShots: [
+            ...state.photoShots,
+            { ...shotData, id: newEntityId('shot'), workspaceId: state.activeWorkspaceId },
+          ],
+        }));
+      },
+
+      togglePhotoShot: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({
+          photoShots: state.photoShots.map((shot) => shot.id === id ? { ...shot, taken: !shot.taken } : shot),
+        }));
+      },
+
+      deletePhotoShot: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({ photoShots: state.photoShots.filter((shot) => shot.id !== id) }));
+      },
+
+      markNotificationRead: (id) => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({
+          notifications: state.notifications.map((notification) => notification.id === id ? { ...notification, read: true } : notification),
+        }));
+      },
+
+      markAllNotificationsRead: () => {
+        if (get().isReadOnlyMode() || !get().isAuthenticated) return;
+        set((state) => ({
+          notifications: state.notifications.map((notification) => ({ ...notification, read: true })),
         }));
       },
 

@@ -53,6 +53,12 @@ describe('Gerenciamento de Estado & Métricas Orçamentárias', () => {
       guests: [],
       budgetItems: [],
       tables: [],
+      stationeryItems: [],
+      photoShots: [],
+      notifications: [],
+      decorItems: [],
+      menuItems: [],
+      venues: [],
     });
   });
 
@@ -165,5 +171,35 @@ describe('Gerenciamento de Estado & Métricas Orçamentárias', () => {
     state = useAppStore.getState();
     expect(state.tables.find((t) => t.id === createdTable!.id)).toBeUndefined();
     expect(state.guests[0].tableId).toBeUndefined();
+  });
+
+  it('deve tornar os módulos editoriais realmente editáveis', () => {
+    const store = useAppStore.getState();
+
+    store.addStationeryItem({
+      title: 'Convite principal',
+      category: 'convite',
+      status: 'criacao',
+      quantity: 80,
+      dueDate: '2027-08-10',
+    });
+    store.addPhotoShot({
+      moment: 'cerimonia',
+      title: 'Entrada do casal',
+      peopleInvolved: 'Casal',
+      priority: 'alta',
+      taken: false,
+    });
+
+    let state = useAppStore.getState();
+    expect(state.stationeryItems).toHaveLength(1);
+    expect(state.photoShots).toHaveLength(1);
+
+    store.updateStationeryItemStatus(state.stationeryItems[0].id, 'producao');
+    store.togglePhotoShot(state.photoShots[0].id);
+    state = useAppStore.getState();
+
+    expect(state.stationeryItems[0].status).toBe('producao');
+    expect(state.photoShots[0].taken).toBe(true);
   });
 });

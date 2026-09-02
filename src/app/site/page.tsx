@@ -1,117 +1,82 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { formatDateLong } from '@/lib/utils';
-import { Globe, Eye, Copy, Heart, MapPin, Calendar, CheckCircle2, Gift } from 'lucide-react';
+import { Check, Copy, Eye, Globe2, Heart, Link2, MapPin, Settings2 } from 'lucide-react';
+
+function normalizeSlug(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48);
+}
 
 export default function SitePage() {
-  const { coupleProfile, gifts } = useAppStore();
+  const { coupleProfile, websiteSettings, updateWebsiteSettings } = useAppStore();
   const [copied, setCopied] = useState(false);
 
   const partner1 = coupleProfile.partner1Name || 'Parceiro 1';
   const partner2 = coupleProfile.partner2Name || 'Parceiro 2';
-  const slug = coupleProfile.customSlug || `${partner1.toLowerCase()}-${partner2.toLowerCase()}`;
+  const fallbackSlug = normalizeSlug(`${partner1}-${partner2}`);
+  const slug = websiteSettings.customSlug || coupleProfile.customSlug || fallbackSlug;
   const dateText = coupleProfile.weddingDate ? formatDateLong(coupleProfile.weddingDate).toUpperCase() : 'DATA A DEFINIR';
-  const cityText = coupleProfile.city ? coupleProfile.city.toUpperCase() : 'CIDADE A DEFINIR';
+  const cityText = coupleProfile.city ? `${coupleProfile.city}${coupleProfile.state ? `, ${coupleProfile.state}` : ''}` : 'LOCAL A DEFINIR';
 
-  const copyLink = () => {
-    const publicUrl = `${window.location.origin}/w/${slug}`;
-    navigator.clipboard.writeText(publicUrl);
+  const publicPath = useMemo(() => `/w/${slug}`, [slug]);
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(`${window.location.origin}${publicPath}`);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    window.setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-surface p-6 rounded-3xl border border-border shadow-subtle">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-5 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <span className="text-xs font-semibold text-rose-500 uppercase tracking-wider block">
-            Construtor de Site Público & Lista de Presentes
-          </span>
-          <h1 className="font-serif text-2xl font-bold text-charcoal mt-1">
-            Site Oficial do Casal & Formulário de RSVP
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Personalize a história, dress code, mapas, lista de cotas de presentes e receba RSVPs online.
-          </p>
+          <span className="brand-kicker">Presença digital do casal</span>
+          <h1 className="workspace-page-heading mt-1 font-serif text-3xl font-medium text-charcoal">Site, informações e RSVP</h1>
+          <p className="mt-2 max-w-2xl text-sm text-[#756B5E]">Edite a experiência dos convidados e acompanhe o endereço que será compartilhado.</p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={copyLink}
-            className="flex items-center gap-2 bg-surface-muted text-charcoal font-semibold text-xs px-4 py-2.5 rounded-xl border border-border hover:bg-rose-50 transition-colors"
-          >
-            <Copy className="w-4 h-4" /> {copied ? 'Link Copiado!' : 'Copiar Link Público'}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={websiteSettings.isPublished ? 'rounded-full bg-emerald-100 px-3 py-2 text-[10px] font-bold text-emerald-800' : 'rounded-full bg-amber-100 px-3 py-2 text-[10px] font-bold text-amber-800'}>
+            {websiteSettings.isPublished ? 'PUBLICADO' : 'RASCUNHO'}
+          </span>
+          <button type="button" onClick={copyLink} className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-charcoal transition hover:bg-surface-muted">
+            {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}{copied ? 'Link copiado' : 'Copiar link'}
           </button>
-          <Link
-            href={`/w/${slug}`}
-            target="_blank"
-            className="flex items-center gap-2 bg-marsala-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-card hover:bg-marsala-600 transition-colors"
-          >
-            <Eye className="w-4 h-4" /> Visualizar Site Público
-          </Link>
+          <Link href={publicPath} target="_blank" className="inline-flex items-center gap-2 rounded-xl bg-marsala-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-marsala-600"><Eye className="h-4 w-4" />Abrir site</Link>
         </div>
       </div>
 
-      {/* Website Preview Banner */}
-      <div className="bg-surface rounded-3xl border border-border shadow-card overflow-hidden">
-        {/* Hero Section Preview */}
-        <div className="relative h-64 marsala-gradient flex flex-col items-center justify-center text-white text-center p-6">
-          <span className="text-xs uppercase tracking-widest text-rose-200 font-semibold">
-            Salvem esta Data
-          </span>
-          <h2 className="font-serif text-4xl font-bold mt-2">
-            {partner1} & {partner2}
-          </h2>
-          <p className="text-xs text-rose-100 mt-2 font-mono">
-            {dateText} • {cityText}
-          </p>
-        </div>
+      <div className="grid gap-6 xl:grid-cols-[.78fr_1.22fr]">
+        <section className="space-y-5 rounded-3xl border border-border bg-surface p-5 shadow-subtle sm:p-6" aria-labelledby="editor-title">
+          <div className="flex items-center gap-3 border-b border-border pb-4"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-marsala-500"><Settings2 className="h-4 w-4" /></span><div><h2 id="editor-title" className="font-serif text-lg font-medium text-charcoal">Conteúdo do site</h2><p className="text-[11px] text-[#756B5E]">As alterações são salvas no seu workspace.</p></div></div>
 
-        {/* Story Section */}
-        <div className="p-8 space-y-6">
-          <div className="max-w-2xl mx-auto text-center space-y-3">
-            <Heart className="w-8 h-8 text-marsala-500 mx-auto" />
-            <h3 className="font-serif text-2xl font-bold text-charcoal">Nossa História de Amor</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              &ldquo;Nos conhecemos e decidimos construir uma linda história juntos. É com enorme alegria que compartilhamos este momento especial com vocês...&rdquo;
-            </p>
+          <label className="block"><span className="mb-1.5 block text-xs font-semibold text-charcoal">Título de abertura</span><input value={websiteSettings.title} onChange={(event) => updateWebsiteSettings({ title: event.target.value })} maxLength={80} className="w-full rounded-xl border border-border bg-white/60 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-marsala-500" placeholder={`${partner1} & ${partner2}`} /></label>
+
+          <label className="block"><span className="mb-1.5 block text-xs font-semibold text-charcoal">Nossa história</span><textarea value={websiteSettings.storyText} onChange={(event) => updateWebsiteSettings({ storyText: event.target.value })} rows={5} maxLength={900} className="w-full resize-none rounded-xl border border-border bg-white/60 px-3.5 py-2.5 text-sm leading-6 outline-none focus:ring-2 focus:ring-marsala-500" placeholder="Conte aos convidados como essa história começou..." /><span className="mt-1 block text-right text-[10px] text-[#8A7E70]">{websiteSettings.storyText.length}/900</span></label>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block"><span className="mb-1.5 block text-xs font-semibold text-charcoal">Dress code</span><textarea value={websiteSettings.dressCodeNotes} onChange={(event) => updateWebsiteSettings({ dressCodeNotes: event.target.value })} rows={4} className="w-full resize-none rounded-xl border border-border bg-white/60 px-3.5 py-2.5 text-xs leading-5 outline-none focus:ring-2 focus:ring-marsala-500" placeholder="Traje, cores ou observações..." /></label>
+            <label className="block"><span className="mb-1.5 block text-xs font-semibold text-charcoal">Hospedagem e deslocamento</span><textarea value={websiteSettings.lodgingNotes} onChange={(event) => updateWebsiteSettings({ lodgingNotes: event.target.value })} rows={4} className="w-full resize-none rounded-xl border border-border bg-white/60 px-3.5 py-2.5 text-xs leading-5 outline-none focus:ring-2 focus:ring-marsala-500" placeholder="Hotéis, transporte e horários..." /></label>
           </div>
 
-          {/* Gift List Grid Preview */}
-          <div className="pt-6 border-t border-border">
-            <h4 className="font-serif text-lg font-bold text-charcoal mb-4 flex items-center gap-2">
-              <Gift className="w-5 h-5 text-marsala-500" />
-              Lista Virtual de Presentes & Cotas de Lua de Mel
-            </h4>
+          <label className="block"><span className="mb-1.5 block text-xs font-semibold text-charcoal">Endereço personalizado</span><div className="flex overflow-hidden rounded-xl border border-border bg-white/60 focus-within:ring-2 focus-within:ring-marsala-500"><span className="flex items-center border-r border-border bg-surface-muted px-3 text-[11px] text-[#756B5E]">/w/</span><input value={websiteSettings.customSlug || fallbackSlug} onChange={(event) => updateWebsiteSettings({ customSlug: normalizeSlug(event.target.value) })} className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-xs outline-none" /></div></label>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {gifts.map((gift) => (
-                <div key={gift.id} className="p-4 rounded-2xl border border-border bg-surface-muted/30 space-y-2">
-                  <span className="text-xs font-bold text-charcoal block">{gift.title}</span>
-                  <span className="font-serif font-bold text-sm text-marsala-500 block">
-                    R$ {gift.price.toLocaleString('pt-BR')}
-                  </span>
-                  {gift.purchased ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full inline-block">
-                      Presenteado por {gift.giverName}
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full inline-block">
-                      Disponível
-                    </span>
-                  )}
-                </div>
-              ))}
-              {gifts.length === 0 && (
-                <p className="text-xs text-slate-400 col-span-3 text-center py-4">Nenhum presente cadastrado na lista.</p>
-              )}
-            </div>
-          </div>
-        </div>
+          <button type="button" onClick={() => updateWebsiteSettings({ isPublished: !websiteSettings.isPublished })} className={websiteSettings.isPublished ? 'flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface-muted px-4 py-3 text-xs font-bold text-charcoal' : 'flex w-full items-center justify-center gap-2 rounded-xl bg-[#213D36] px-4 py-3 text-xs font-bold text-white'}><Globe2 className="h-4 w-4" />{websiteSettings.isPublished ? 'Voltar para rascunho' : 'Publicar site do casal'}</button>
+        </section>
+
+        <section className="overflow-hidden rounded-3xl border border-border bg-surface shadow-card" aria-label="Prévia do site do casal">
+          <div className="flex items-center justify-between border-b border-border bg-[#183A33] px-4 py-3 text-[#F4EBDD]"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#B86645]" /><span className="text-[10px] font-semibold uppercase tracking-[.14em]">Prévia ao vivo</span></div><span className="flex items-center gap-1.5 text-[10px] text-[#CFC5B5]"><Link2 className="h-3 w-3" />{publicPath}</span></div>
+          <div className="relative flex min-h-[24rem] flex-col items-center justify-center overflow-hidden bg-[#213D36] px-6 py-14 text-center text-[#F4EBDD]"><div className="absolute inset-0 bg-[url('/brand/lacora-ribbon-pattern.svg')] bg-cover bg-center opacity-60" /><div className="relative"><span className="text-[10px] font-bold uppercase tracking-[.28em] text-[#E5A27A]">Celebre conosco</span><h2 className="mt-4 font-serif text-5xl font-medium sm:text-6xl">{websiteSettings.title || `${partner1} & ${partner2}`}</h2><div className="mx-auto my-6 h-px w-14 bg-[#C8875F]" /><p className="text-xs tracking-[.12em] text-[#DED3C2]">{dateText}</p><p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-[#CFC5B5]"><MapPin className="h-3.5 w-3.5" />{cityText}</p></div></div>
+          <div className="space-y-8 p-6 sm:p-9"><div className="mx-auto max-w-2xl text-center"><Heart className="mx-auto h-6 w-6 text-marsala-500" /><h3 className="mt-3 font-serif text-2xl font-medium text-charcoal">Nossa história</h3><p className="mt-3 whitespace-pre-line text-sm leading-6 text-[#655B50]">{websiteSettings.storyText || 'Conte aqui a história que vocês querem dividir com os convidados.'}</p></div><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-surface-muted p-4"><span className="text-[10px] font-bold uppercase tracking-[.14em] text-marsala-500">Dress code</span><p className="mt-2 text-xs leading-5 text-[#655B50]">{websiteSettings.dressCodeNotes || 'Adicione orientações de traje e cores.'}</p></div><div className="rounded-2xl bg-surface-muted p-4"><span className="text-[10px] font-bold uppercase tracking-[.14em] text-marsala-500">Como chegar</span><p className="mt-2 text-xs leading-5 text-[#655B50]">{websiteSettings.lodgingNotes || 'Adicione hospedagem, transporte e outras orientações.'}</p></div></div></div>
+        </section>
       </div>
     </div>
   );

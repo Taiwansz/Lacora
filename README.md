@@ -2,6 +2,8 @@
 
 Plataforma de gestão de casamentos construída com Next.js, Supabase e Stripe.
 
+A direção visual, as regras de uso da marca e o inventário de assets estão em [BRAND_GUIDE.md](./BRAND_GUIDE.md).
+
 ## Configuração
 
 1. Use Node.js 20 ou superior.

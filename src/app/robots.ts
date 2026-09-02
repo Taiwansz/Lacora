@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://nosso-grande-dia-omega.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '');
 
   return {
     rules: [
@@ -36,6 +36,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    ...(baseUrl ? { sitemap: `${baseUrl}/sitemap.xml` } : {}),
   };
 }

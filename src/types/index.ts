@@ -457,6 +457,18 @@ export interface MenuItem {
   tastingApproved: boolean;
 }
 
+export interface StationeryItem {
+  id: string;
+  workspaceId: string;
+  title: string;
+  category: 'save_the_date' | 'convite' | 'padrinhos' | 'sinalizacao' | 'menu' | 'lembranca' | 'outro';
+  status: 'ideia' | 'criacao' | 'aprovacao' | 'producao' | 'entregue';
+  quantity: number;
+  dueDate?: string;
+  vendorName?: string;
+  notes?: string;
+}
+
 export interface TimelineItem {
   id: string;
   workspaceId: string;
