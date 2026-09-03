@@ -7,10 +7,13 @@ function source(path: string) {
 }
 
 describe('Acesso privado e experiência pública', () => {
-  it('valida a senha somente no backend e cria um cookie httpOnly limitado', () => {
+  it('valida a senha somente no servidor e cria um cookie httpOnly limitado', () => {
     const route = source('src/app/api/access/route.ts');
-    expect(route).toContain('/functions/v1/private-access');
+    const form = source('src/app/acesso/AccessForm.tsx');
+    expect(form).toContain('/functions/v1/private-access');
     expect(route).toContain('verifyAccessToken');
+    expect(route).not.toContain('body.password');
+    expect(route).not.toContain('/functions/v1/private-access');
     expect(route).toContain('httpOnly: true');
     expect(route).toContain("sameSite: 'strict'");
     expect(route).toContain('MAX_ATTEMPTS');
