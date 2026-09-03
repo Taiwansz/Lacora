@@ -14,34 +14,10 @@ export function AccessForm({ nextPath }: { nextPath: string }) {
     setLoading(true);
     setError('');
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-    if (!supabaseUrl) {
-      setLoading(false);
-      setError('Acesso temporariamente indisponível.');
-      return;
-    }
-
-    const verificationResponse = await fetch(
-      `${supabaseUrl}/functions/v1/private-access`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ password: password.trim() }),
-        cache: 'no-store',
-      }
-    ).catch(() => null);
-    const verification = await verificationResponse?.json().catch(() => ({}));
-
-    if (!verificationResponse?.ok || typeof verification.token !== 'string') {
-      setLoading(false);
-      setError(verification?.error || 'Não foi possível validar a senha.');
-      return;
-    }
-
     const response = await fetch('/api/access', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ token: verification.token, next: nextPath }),
+      body: JSON.stringify({ password: password.trim(), next: nextPath }),
     });
     const result = await response.json().catch(() => ({}));
 

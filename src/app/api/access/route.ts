@@ -6,6 +6,8 @@ import {
 } from '@/lib/access-constants';
 import { verifyAccessToken } from '@/lib/access-token';
 
+export const runtime = 'edge';
+
 const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 6;
 const attempts = new Map<string, { count: number; resetAt: number }>();
@@ -42,17 +44,43 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const token = typeof body.token === 'string' ? body.token : '';
+  const password = typeof body.password === 'string' ? body.password.trim() : '';
   const nextPath = isSafeInternalPath(body.next) ? body.next : '/dashboard';
 
-  if (!(await verifyAccessToken(token))) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!supabaseUrl) {
+    return NextResponse.json({ error: 'Acesso temporariamente indisponível.' }, { status: 503 });
+  }
+
+  const verifier = await fetch(`${supabaseUrl}/functions/v1/private-access`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password }),
+    cache: 'no-store',
+  }).catch((error) => {
+    console.error('[api/access] private-access request failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  });
+  const verification = await verifier?.json().catch(() => ({}));
+
+  if (
+    !verifier ||
+    !verifier.ok ||
+    typeof verification.token !== 'string' ||
+    !(await verifyAccessToken(verification.token))
+  ) {
     registerFailure(key);
-    return NextResponse.json({ error: 'Acesso inválido.' }, { status: 401 });
+    return NextResponse.json(
+      { error: verification?.error || 'Não foi possível validar a senha.' },
+      { status: verifier?.status || 503 }
+    );
   }
 
   attempts.delete(key);
   const response = NextResponse.json({ ok: true, next: nextPath });
-  response.cookies.set(ACCESS_COOKIE_NAME, token, {
+  response.cookies.set(ACCESS_COOKIE_NAME, verification.token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
