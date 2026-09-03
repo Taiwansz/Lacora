@@ -194,7 +194,7 @@ export default function DashboardPage() {
             <div
               className="h-12 w-12 rounded-full p-[5px]"
               style={{
-                background: `conic-gradient(#213D36 ${taskCompletion * 3.6}deg, #DED3C2 0deg)`,
+                background: `conic-gradient(#111B3A ${taskCompletion * 3.6}deg, #DED2C0 0deg)`,
               }}
               aria-label={`${taskCompletion}% das tarefas concluídas`}
             >

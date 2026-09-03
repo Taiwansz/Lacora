@@ -57,7 +57,7 @@ export const MobileNav: React.FC = () => {
           aria-label="Menu de Navegação Mobile"
           className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end no-print"
         >
-          <div className="w-4/5 max-w-xs bg-[#17342E] text-[#F4EBDD] h-full p-5 overflow-y-auto flex flex-col shadow-floating space-y-5">
+          <div className="w-4/5 max-w-xs bg-[#17342E] text-[#F8F1DF] h-full p-5 overflow-y-auto flex flex-col shadow-floating space-y-5">
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <LacoraLogo inverted />
               <button

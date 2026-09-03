@@ -100,7 +100,7 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="workspace-sidebar sticky top-0 h-screen w-[17.5rem] border-r hidden md:flex flex-col no-print shrink-0 text-[#F4EBDD]">
+    <aside className="workspace-sidebar sticky top-0 h-screen w-[17.5rem] border-r hidden md:flex flex-col no-print shrink-0 text-[#F8F1DF]">
       {/* Brand Header */}
       <div className="px-5 py-6 border-b border-white/10">
         <Link href="/dashboard" aria-label="Laçora — início">
@@ -119,7 +119,7 @@ export const Sidebar: React.FC = () => {
             placeholder="Buscar módulo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-xs text-[#F4EBDD] placeholder:text-[#AB9F8D] bg-white/[0.06] border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-[#B86645] focus:border-transparent"
+            className="w-full pl-8 pr-3 py-2 text-xs text-[#F8F1DF] placeholder:text-[#AB9F8D] bg-white/[0.06] border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-[#7A2738] focus:border-transparent"
           />
         </div>
       </div>
@@ -141,7 +141,7 @@ export const Sidebar: React.FC = () => {
             <div key={group.title} className="space-y-1">
               <button
                 onClick={() => toggleGroup(group.title)}
-                className="w-full flex items-center justify-between px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#AFA593] hover:text-[#F4EBDD] transition-colors"
+                className="w-full flex items-center justify-between px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#AFA593] hover:text-[#F8F1DF] transition-colors"
               >
                 <span>{group.title}</span>
                 {isCollapsed && !searchTerm.trim() ? (

@@ -22,7 +22,7 @@ export function PrivateWorkspaceShell({ children }: { children: React.ReactNode 
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4ebdd] text-[#675d52]">
+      <div className="flex min-h-screen items-center justify-center bg-[#F8F1DF] text-[#675d52]">
         <p className="text-sm">Abrindo o espaço do casal...</p>
       </div>
     );

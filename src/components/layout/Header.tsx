@@ -64,7 +64,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-3">
           {/* Couple workspace identity */}
           <div className="hidden lg:flex items-center gap-2 text-xs text-slate-600">
-            <div className="h-8 w-8 rounded-full bg-[#213D36] text-[#F4EBDD] flex items-center justify-center border-2 border-white/60 shadow-subtle">
+            <div className="h-8 w-8 rounded-full bg-[#111B3A] text-[#F8F1DF] flex items-center justify-center border-2 border-white/60 shadow-subtle">
               <UserIcon className="h-3.5 w-3.5" />
             </div>
             <div className="leading-tight">

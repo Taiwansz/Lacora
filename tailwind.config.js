@@ -44,8 +44,8 @@ module.exports = {
         charcoal: "rgb(var(--color-charcoal) / <alpha-value>)",
       },
       fontFamily: {
-        serif: ["Iowan Old Style", "Baskerville", "Times New Roman", "serif"],
-        sans: ["Avenir Next", "Segoe UI", "Inter", "sans-serif"],
+        serif: ["var(--font-serif)"],
+        sans: ["var(--font-sans)"],
       },
       boxShadow: {
         subtle: "0 2px 10px rgba(0, 0, 0, 0.03)",
