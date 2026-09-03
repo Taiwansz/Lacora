@@ -54,11 +54,15 @@ export async function POST(request: NextRequest) {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-forwarded-for': key,
     },
     body: JSON.stringify({ password }),
     cache: 'no-store',
-  }).catch(() => null);
+  }).catch((error) => {
+    console.error('[api/access] private-access request failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  });
   const verification = await verifier?.json().catch(() => ({}));
 
   if (
