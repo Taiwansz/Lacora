@@ -5,3 +5,5 @@ por outra imagem com o mesmo nome. Prefira uma foto horizontal em proporção 16
 com pelo menos 1600 px de largura e o casal mais próximo do lado direito.
 
 O arquivo `floral-corner.webp` contém o arranjo floral usado nos cantos do site.
+
+O arquivo `mv-monogram.webp` é o monograma ilustrado oficial usado no site.

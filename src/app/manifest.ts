@@ -11,9 +11,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#111B3A',
     icons: [
       {
-        src: '/lacora-mark.svg',
-        sizes: '80x80',
-        type: 'image/svg+xml',
+        src: '/identity/mv-monogram-icon.png',
+        sizes: '512x512',
+        type: 'image/png',
       },
     ],
   };

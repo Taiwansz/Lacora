@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 type LacoraLogoProps = {
@@ -16,36 +17,18 @@ export function LacoraMark({
   inverted?: boolean;
 }) {
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 96 118"
-      className={cn('shrink-0', className)}
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <text
-        x="45"
-        y="66"
-        textAnchor="middle"
-        fontFamily="Cormorant Garamond, Iowan Old Style, Baskerville, Times New Roman, serif"
-        fontSize="76"
-        fontWeight="500"
-        fill={inverted ? '#F8F1DF' : '#111B3A'}
-      >
-        M
-      </text>
-      <text
-        x="54"
-        y="112"
-        textAnchor="middle"
-        fontFamily="Cormorant Garamond, Iowan Old Style, Baskerville, Times New Roman, serif"
-        fontSize="70"
-        fontWeight="400"
-        fill={inverted ? '#F8F1DF' : '#111B3A'}
-      >
-        V
-      </text>
-    </svg>
+    <Image
+      src="/identity/mv-monogram.webp"
+      alt=""
+      width={761}
+      height={1152}
+      sizes="(max-width: 640px) 9rem, 12rem"
+      className={cn(
+        'shrink-0 object-contain',
+        inverted && 'rounded-[42%] bg-[#F8F1DF] p-1',
+        className
+      )}
+    />
   );
 }
 
