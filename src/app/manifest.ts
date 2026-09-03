@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Laçora — O nosso grande dia',
-    short_name: 'Laçora',
+    name: 'M & V — O nosso grande dia',
+    short_name: 'M & V',
     description: 'Nossa história, os detalhes da celebração e a lista de presentes.',
     start_url: '/',
     display: 'standalone',

@@ -1,17 +1,12 @@
 {
-  "name": "Laçora — Do primeiro plano ao grande dia",
-  "short_name": "Laçora",
-  "description": "Planejamento de casamentos: convidados, orçamento, cronograma, fornecedores e site.",
+  "name": "M & V — O nosso grande dia",
+  "short_name": "M & V",
+  "description": "Nossa história, os detalhes da celebração e a lista de presentes.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F4EBDD",
-  "theme_color": "#213D36",
+  "background_color": "#F8F1DF",
+  "theme_color": "#111B3A",
   "icons": [
-    {
-      "src": "/lacora-mark.svg",
-      "sizes": "80x80",
-      "type": "image/svg+xml"
-    },
     {
       "src": "/lacora-mark.svg",
       "sizes": "80x80",

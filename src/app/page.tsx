@@ -4,15 +4,18 @@ import {
   ArrowDown,
   ArrowRight,
   CalendarDays,
+  Flower2,
   Gift,
-  Heart,
   MapPin,
   Quote,
   UsersRound,
 } from 'lucide-react';
+import { LacoraMark } from '@/components/brand/LacoraLogo';
 import { weddingContent } from '@/lib/wedding-content';
 
 const floralAsset = '/identity/floral-corner.webp';
+// Troque este arquivo mantendo o mesmo nome para atualizar a foto do casal.
+const couplePhotoAsset = '/identity/couple-background-placeholder.webp';
 
 export default function WeddingLandingPage() {
   return (
@@ -49,6 +52,7 @@ export default function WeddingLandingPage() {
           />
 
           <div className="relative z-10 mx-auto max-w-4xl py-10">
+            <LacoraMark className="mx-auto h-28 w-24 sm:h-36 sm:w-28" />
             <span className="invitation-kicker">{weddingContent.hero.eyebrow}</span>
             <span className="mx-auto mt-5 block h-px w-12 bg-[#7A2738]" />
             <h1 className="mt-7 font-serif text-[clamp(3.1rem,8vw,7rem)] font-normal leading-[.91] tracking-[-.055em] text-[#111B3A]">
@@ -68,6 +72,33 @@ export default function WeddingLandingPage() {
                 Nossa história <ArrowDown className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="couple-photo-section relative isolate min-h-[34rem] overflow-hidden sm:min-h-[40rem] lg:min-h-[46rem]">
+        <Image
+          src={couplePhotoAsset}
+          alt="Casal caminhando junto em um jardim ao pôr do sol"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[68%_center]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,15,36,.92)_0%,rgba(9,15,36,.72)_40%,rgba(9,15,36,.18)_78%,rgba(9,15,36,.08)_100%)]" />
+        <div className="photo-grain absolute inset-0 opacity-25" />
+        <div className="relative mx-auto flex min-h-[34rem] max-w-7xl items-center px-6 py-20 sm:min-h-[40rem] sm:px-8 lg:min-h-[46rem] lg:px-12">
+          <div className="max-w-xl text-[#F8F1DF]">
+            <span className="text-[10px] font-bold uppercase tracking-[.26em] text-[#E2B7C0]">A nossa escolha</span>
+            <h2 className="mt-5 font-serif text-5xl font-normal leading-[.96] tracking-[-.045em] sm:text-6xl lg:text-7xl">
+              A vida ficou mais bonita quando passou a ser nossa.
+            </h2>
+            <p className="mt-7 max-w-lg text-base leading-8 text-[#E1DDD6]">
+              Entre tantos caminhos, escolhemos seguir lado a lado. Este é só o começo de tudo o que ainda vamos viver.
+            </p>
+            <a href="#nossa-historia" className="mt-9 inline-flex items-center gap-2 border-b border-[#D7A1AD] pb-2 text-xs font-bold uppercase tracking-[.14em] text-[#F8F1DF] transition hover:text-[#E2B7C0]">
+              Conheça nossa história <ArrowDown className="h-4 w-4" aria-hidden="true" />
+            </a>
           </div>
         </div>
       </section>
@@ -154,7 +185,7 @@ export default function WeddingLandingPage() {
         <div className="stationery-card relative mx-auto max-w-7xl overflow-hidden px-6 py-14 text-center sm:px-12 sm:py-20">
           <Image src={floralAsset} alt="" width={1100} height={1005} sizes="28vw" className="pointer-events-none absolute -right-16 -top-16 w-[18rem] opacity-90 sm:w-[24rem]" />
           <div className="relative mx-auto max-w-3xl">
-            <Heart className="mx-auto h-6 w-6 text-[#7A2738]" aria-hidden="true" />
+            <Flower2 className="mx-auto h-6 w-6 text-[#7A2738]" aria-hidden="true" />
             <span className="mt-5 block text-[10px] font-bold uppercase tracking-[.22em] text-[#7A2738]">Com carinho</span>
             <h2 className="mt-4 font-serif text-4xl font-normal leading-tight tracking-[-.04em] text-[#111B3A] sm:text-6xl">
               Sua presença é parte da nossa história.

@@ -103,7 +103,7 @@ export const Sidebar: React.FC = () => {
     <aside className="workspace-sidebar sticky top-0 h-screen w-[17.5rem] border-r hidden md:flex flex-col no-print shrink-0 text-[#F8F1DF]">
       {/* Brand Header */}
       <div className="px-5 py-6 border-b border-white/10">
-        <Link href="/dashboard" aria-label="Laçora — início">
+        <Link href="/dashboard" aria-label="M e V — início">
           <LacoraLogo inverted />
         </Link>
       </div>
@@ -182,7 +182,7 @@ export const Sidebar: React.FC = () => {
       {/* Footer */}
       <div className="px-5 py-4 border-t border-white/10 text-[10px] text-[#AFA593]">
         <span className="block text-[#D8CBB8]">O começo de uma vida a dois.</span>
-        <span className="mt-0.5 block">Laçora &copy; {new Date().getFullYear()}</span>
+        <span className="mt-0.5 block">Nosso casamento &copy; {new Date().getFullYear()}</span>
       </div>
     </aside>
   );

@@ -20,9 +20,8 @@ export default async function AccessPage({
         <Link href="/" className="mb-5 inline-flex items-center gap-2 text-xs font-semibold text-[#D7D2CB] transition hover:text-white">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Voltar ao site
         </Link>
-        <div className="mb-6 flex items-center gap-3 px-2">
-          <LacoraMark className="h-10 w-10" />
-          <span className="brand-wordmark text-3xl text-[#F8F1DF]">Laçora</span>
+        <div className="mb-6 flex items-center px-2">
+          <LacoraMark inverted className="h-16 w-14" />
         </div>
         <AccessForm nextPath={nextPath} />
       </div>

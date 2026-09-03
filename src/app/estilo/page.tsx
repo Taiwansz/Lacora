@@ -21,7 +21,7 @@ export default function EstiloPage() {
   const handleExportPDF = () => {
     const headers = ['Cor', 'HEX', 'RGB', 'Função & Aplicação'];
     const rows = palette.colors.map((c) => [c.name, c.hex, c.rgb, c.appliedTo.join(', ')]);
-    generateSimplePDF('Guia de Identidade Visual - Laçora', headers, rows);
+    generateSimplePDF('Guia de Identidade Visual - M & V', headers, rows);
   };
 
   return (

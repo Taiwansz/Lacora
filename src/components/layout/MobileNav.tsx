@@ -22,7 +22,7 @@ export const MobileNav: React.FC = () => {
   return (
     <>
       {/* Bottom Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#17342E]/95 backdrop-blur-md border-t border-white/10 flex items-center justify-around py-2 px-1 no-print">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#111B3A]/95 backdrop-blur-md border-t border-white/10 flex items-center justify-around py-2 px-1 no-print">
         {mainTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = pathname === tab.href;
@@ -32,7 +32,7 @@ export const MobileNav: React.FC = () => {
               href={tab.href}
               className={cn(
                 'flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg text-[10px] font-medium transition-colors',
-                isActive ? 'text-[#D98761] font-bold' : 'text-[#D8CBB8] hover:text-white'
+                isActive ? 'text-[#D7A1AD] font-bold' : 'text-[#D8CBB8] hover:text-white'
               )}
             >
               <Icon className="w-4 h-4" />
@@ -57,7 +57,7 @@ export const MobileNav: React.FC = () => {
           aria-label="Menu de Navegação Mobile"
           className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end no-print"
         >
-          <div className="w-4/5 max-w-xs bg-[#17342E] text-[#F8F1DF] h-full p-5 overflow-y-auto flex flex-col shadow-floating space-y-5">
+          <div className="w-4/5 max-w-xs bg-[#111B3A] text-[#F8F1DF] h-full p-5 overflow-y-auto flex flex-col shadow-floating space-y-5">
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <LacoraLogo inverted />
               <button

@@ -7,8 +7,8 @@ const publicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 export const metadata: Metadata = {
   ...(publicSiteUrl ? { metadataBase: new URL(publicSiteUrl) } : {}),
   title: {
-    default: 'Laçora — O nosso grande dia',
-    template: '%s | Laçora',
+    default: 'M & V — O nosso grande dia',
+    template: '%s | M & V',
   },
   description:
     'Conheça a nossa história, veja os detalhes do grande dia e encontre a lista de presentes.',
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
     'lista de presentes',
     'nosso grande dia',
   ],
-  authors: [{ name: 'Laçora' }],
-  creator: 'Laçora',
-  publisher: 'Laçora',
+  authors: [{ name: 'M & V' }],
+  creator: 'M & V',
+  publisher: 'M & V',
   robots: {
     index: true,
     follow: true,
@@ -29,14 +29,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'pt_BR',
     ...(publicSiteUrl ? { url: publicSiteUrl } : {}),
-    siteName: 'Laçora',
-    title: 'Laçora — O nosso grande dia',
+    siteName: 'M & V',
+    title: 'M & V — O nosso grande dia',
     description:
       'Conheça a nossa história, veja os detalhes do grande dia e encontre a lista de presentes.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Laçora — O nosso grande dia',
+    title: 'M & V — O nosso grande dia',
     description:
       'Conheça a nossa história, veja os detalhes do grande dia e encontre a lista de presentes.',
   },

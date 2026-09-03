@@ -75,7 +75,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const site = await loadWeddingSite(slug);
-  if (!site) return { title: 'Site não encontrado — Laçora' };
+  if (!site) return { title: 'Site não encontrado' };
 
   const title = `${site.partner1Name} & ${site.partner2Name}`;
   return {

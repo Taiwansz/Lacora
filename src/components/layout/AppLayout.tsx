@@ -35,8 +35,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen flex-col bg-[#F6F0DF] text-charcoal selection:bg-[#E4BBC4] selection:text-[#111B3A]">
         <header className="sticky top-0 z-40 border-b border-[#D8CDBD]/80 bg-[#F8F1DF]/92 px-5 py-3 backdrop-blur-xl sm:px-8 lg:px-12">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-5">
-            <Link href="/" aria-label="Laçora — início">
-              <LacoraLogo className="gap-2.5 [&>div]:hidden sm:[&>div]:block" markClassName="h-9 w-9" />
+            <Link href="/" aria-label="M e V — início">
+              <LacoraLogo compact markClassName="h-11 w-10" />
             </Link>
             <nav className="hidden items-center gap-6 text-[11px] font-semibold uppercase tracking-[.08em] text-[#4D536B] md:flex" aria-label="Navegação do casamento">
               <Link href="/#nossa-historia" className="transition hover:text-[#7A2738]">Nossa história</Link>
@@ -62,9 +62,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <footer className="bg-[#090F24] px-5 py-12 text-[#D0CBC4] sm:px-8 lg:px-12">
           <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 text-center sm:flex-row sm:text-left">
             <div className="flex items-center gap-3">
-              <LacoraMark inverted className="h-9 w-9" />
+              <LacoraMark inverted className="h-12 w-10" />
               <div>
-                <span className="brand-wordmark block text-2xl text-[#F8F1DF]">Laçora</span>
+                <span className="font-serif block text-xl text-[#F8F1DF]">O nosso grande dia</span>
                 <span className="text-[9px] uppercase tracking-[.15em] text-[#CBA0A9]">O começo da nossa vida a dois</span>
               </div>
             </div>

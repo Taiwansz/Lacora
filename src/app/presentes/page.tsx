@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Gift, Heart } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Flower2, Gift } from 'lucide-react';
 import { weddingContent } from '@/lib/wedding-content';
 import { formatBRL } from '@/lib/utils';
 
@@ -47,7 +47,7 @@ export default function GiftsPage() {
             <article key={gift.id} className="gift-card group flex min-h-[22rem] flex-col overflow-hidden bg-[#FFFAF0] p-6 transition duration-300 hover:-translate-y-1 hover:shadow-[0_25px_65px_rgba(17,27,58,.11)] sm:p-7">
               <div className="flex items-start justify-between">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F1E2E2] text-[#7A2738]">
-                  {index % 2 === 0 ? <Gift className="h-4 w-4" aria-hidden="true" /> : <Heart className="h-4 w-4" aria-hidden="true" />}
+                  {index % 2 === 0 ? <Gift className="h-4 w-4" aria-hidden="true" /> : <Flower2 className="h-4 w-4" aria-hidden="true" />}
                 </span>
                 <span className="text-[9px] font-bold uppercase tracking-[.18em] text-[#7A2738]">{gift.category}</span>
               </div>

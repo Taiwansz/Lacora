@@ -81,6 +81,13 @@ h1, h2, h3, .font-serif-title {
   filter: grayscale(1) brightness(0) invert(1);
 }
 
+.photo-grain {
+  pointer-events: none;
+  background-image: radial-gradient(rgb(248 241 223 / 12%) 0.6px, transparent 0.6px);
+  background-size: 4px 4px;
+  mix-blend-mode: soft-light;
+}
+
 .stationery-card {
   border: 1px solid #d8cdbd;
   border-radius: 1.4rem;
