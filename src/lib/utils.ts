@@ -1,7 +1,5 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import jsPDF from 'jspdf';
-import Papa from 'papaparse';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -68,7 +66,8 @@ export function getDaysCountdown(targetDateStr: string): { days: number; hours: 
 }
 
 // Exportação em CSV
-export function exportToCSV(filename: string, rows: object[]) {
+export async function exportToCSV(filename: string, rows: object[]) {
+  const { default: Papa } = await import('papaparse');
   const csv = Papa.unparse(rows);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -81,7 +80,8 @@ export function exportToCSV(filename: string, rows: object[]) {
 }
 
 // Geração de PDF Limpo Monocromático
-export function generateSimplePDF(title: string, headers: string[], rows: (string | number)[][]) {
+export async function generateSimplePDF(title: string, headers: string[], rows: (string | number)[][]) {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF();
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);

@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Laçora — Do primeiro plano ao grande dia',
+    name: 'Laçora — O nosso grande dia',
     short_name: 'Laçora',
-    description: 'Planejamento de casamentos: orçamento, convidados, RSVP, mesas e cronograma.',
+    description: 'Nossa história, os detalhes da celebração e a lista de presentes.',
     start_url: '/',
     display: 'standalone',
     background_color: '#F4EBDD',

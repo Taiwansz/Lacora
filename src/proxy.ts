@@ -1,96 +1,76 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { ACCESS_COOKIE_NAME } from '@/lib/access-constants';
+import { verifyAccessToken } from '@/lib/access-token';
 
-const DEMO_COOKIE = 'nosso_grande_dia_demo_mode';
+const PUBLIC_PAGES = new Set([
+  '/',
+  '/presentes',
+  '/acesso',
+]);
 
-function isPublicPage(pathname: string) {
-  const exactPublicPages = new Set([
-    '/',
-    '/login',
-    '/cadastro',
-    '/recuperar-senha',
-    '/termos',
-    '/privacidade',
-    '/suporte',
-    '/contato',
-    '/auth/callback',
-  ]);
-
-  if (exactPublicPages.has(pathname)) return true;
-  if (pathname.startsWith('/w/')) return true;
-  if (pathname.startsWith('/rsvp/')) return true;
-
-  // Temporary compatibility alias for the old public wedding URL. The
-  // administrative editor remains the exact protected route `/site`.
-  if (/^\/site\/[^/]+\/?$/.test(pathname)) return true;
-
-  return false;
-}
+const LEGACY_SAAS_PAGES = new Set([
+  '/login',
+  '/cadastro',
+  '/recuperar-senha',
+  '/redefinir-senha',
+  '/onboarding',
+  '/assinatura',
+  '/conta',
+  '/equipe',
+  '/auditoria',
+]);
 
 function isPublicApi(pathname: string) {
   return (
-    pathname === '/api/demo/session' ||
-    pathname === '/api/contact' ||
-    pathname.startsWith('/api/rsvp/') ||
-    pathname === '/api/webhooks/stripe'
+    pathname === '/api/access' ||
+    pathname === '/api/access/logout' ||
+    pathname.startsWith('/api/rsvp/')
   );
 }
 
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
   const pathname = request.nextUrl.pathname;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const authorized = await verifyAccessToken(
+    request.cookies.get(ACCESS_COOKIE_NAME)?.value
+  );
 
-  let user = null;
-  if (supabaseUrl && supabaseAnonKey) {
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
-      },
-    });
-
-    const {
-      data: { user: authenticatedUser },
-    } = await supabase.auth.getUser();
-    user = authenticatedUser;
+  if (LEGACY_SAAS_PAGES.has(pathname)) {
+    const destination = request.nextUrl.clone();
+    destination.pathname = authorized ? '/dashboard' : '/acesso';
+    destination.search = '';
+    return NextResponse.redirect(destination);
   }
 
-  const isApi = pathname.startsWith('/api/');
-  const hasDemoPageSession = request.cookies.get(DEMO_COOKIE)?.value === 'true';
-
-  // Demo mode is never an API credential. Public APIs must validate their own
-  // narrowly scoped input; every other endpoint requires a real Supabase user.
-  if (isApi && !isPublicApi(pathname) && !user) {
-    return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+  if (pathname === '/acesso' && authorized) {
+    const dashboard = request.nextUrl.clone();
+    dashboard.pathname = '/dashboard';
+    dashboard.search = '';
+    return NextResponse.redirect(dashboard);
   }
 
-  if (!isApi && !isPublicPage(pathname) && !user && !hasDemoPageSession) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = '/login';
-    loginUrl.search = '';
-    loginUrl.searchParams.set(
-      'redirect',
-      `${pathname}${request.nextUrl.search}`
-    );
-    return NextResponse.redirect(loginUrl);
+  if (pathname.startsWith('/api/')) {
+    if (isPublicApi(pathname) || authorized) return NextResponse.next();
+    return NextResponse.json({ error: 'Acesso restrito ao casal.' }, { status: 401 });
   }
 
-  if (user && (pathname === '/login' || pathname === '/cadastro')) {
-    const dashboardUrl = request.nextUrl.clone();
-    dashboardUrl.pathname = '/dashboard';
-    dashboardUrl.search = '';
-    return NextResponse.redirect(dashboardUrl);
+  if (
+    PUBLIC_PAGES.has(pathname) ||
+    pathname.startsWith('/w/') ||
+    pathname.startsWith('/rsvp/') ||
+    /^\/site\/[^/]+\/?$/.test(pathname)
+  ) {
+    return NextResponse.next();
   }
 
-  return response;
+  if (!authorized) {
+    const accessUrl = request.nextUrl.clone();
+    accessUrl.pathname = '/acesso';
+    accessUrl.search = '';
+    accessUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(accessUrl);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

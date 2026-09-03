@@ -7,19 +7,16 @@ const publicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 export const metadata: Metadata = {
   ...(publicSiteUrl ? { metadataBase: new URL(publicSiteUrl) } : {}),
   title: {
-    default: 'Laçora — Do primeiro plano ao grande dia',
+    default: 'Laçora — O nosso grande dia',
     template: '%s | Laçora',
   },
   description:
-    'Planejamento de casamentos em um só lugar: convidados, orçamento, cronograma, fornecedores, mesas e RSVP.',
+    'Conheça a nossa história, veja os detalhes do grande dia e encontre a lista de presentes.',
   keywords: [
-    'gestão de casamentos',
-    'plataforma de casamento',
-    'organizar casamento',
-    'rsvp online',
-    'orçamento de casamento',
-    'planta de mesas',
-    'cronograma dia h',
+    'casamento',
+    'site dos noivos',
+    'lista de presentes',
+    'nosso grande dia',
   ],
   authors: [{ name: 'Laçora' }],
   creator: 'Laçora',
@@ -33,15 +30,15 @@ export const metadata: Metadata = {
     locale: 'pt_BR',
     ...(publicSiteUrl ? { url: publicSiteUrl } : {}),
     siteName: 'Laçora',
-    title: 'Laçora — Do primeiro plano ao grande dia',
+    title: 'Laçora — O nosso grande dia',
     description:
-      'Planejamento de casamentos em um só lugar: convidados, orçamento, cronograma, fornecedores, mesas e RSVP.',
+      'Conheça a nossa história, veja os detalhes do grande dia e encontre a lista de presentes.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Laçora — Do primeiro plano ao grande dia',
+    title: 'Laçora — O nosso grande dia',
     description:
-      'Planejamento de casamentos em um só lugar: convidados, orçamento, cronograma, fornecedores, mesas e RSVP.',
+      'Conheça a nossa história, veja os detalhes do grande dia e encontre a lista de presentes.',
   },
 };
 

@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const chromiumExecutable = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+const browserLaunchOptions = chromiumExecutable
+  ? { launchOptions: { executablePath: chromiumExecutable } }
+  : {};
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
@@ -17,7 +22,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], ...browserLaunchOptions },
+    },
+    {
+      name: 'mobile-chromium',
+      use: { ...devices['Pixel 7'], ...browserLaunchOptions },
     },
   ],
   webServer: {

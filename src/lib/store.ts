@@ -32,26 +32,6 @@ import {
   RiskItem,
   CivilWeddingInfo
 } from '../types';
-import {
-  DEMO_WORKSPACE_ID,
-  demoCoupleProfile,
-  demoPalette,
-  demoVenues,
-  demoOutfits,
-  demoHouseholds,
-  demoGuests,
-  demoTables,
-  demoTasks,
-  demoVendors,
-  demoBudgetItems,
-  demoPayments,
-  demoTimeline,
-  demoDocuments,
-  demoGifts,
-  demoPhotoShots,
-  demoNotifications,
-  demoActivityLog
-} from './demo-data';
 
 export interface AppStoreState {
   // Authentication & Session
@@ -331,6 +311,55 @@ function emptyWorkspaceState(
   };
 }
 
+const PRIVATE_WORKSPACE_ID = 'lacora-private';
+const LOCAL_SNAPSHOT_KEY = 'lacora-private-workspace-v1';
+const PRIVATE_USER_ID = 'lacora-couple';
+const privateWorkspaceBase = emptyWorkspaceState(
+  PRIVATE_WORKSPACE_ID,
+  'Jonas',
+  'Nome da noiva',
+  'nosso-casamento'
+);
+
+const privateUser: User = {
+  id: PRIVATE_USER_ID,
+  name: 'Nós dois',
+  email: '',
+  emailVerified: true,
+  createdAt: '2026-01-01',
+  updatedAt: '2026-01-01',
+};
+
+const privateWorkspace: WeddingWorkspace = {
+  id: PRIVATE_WORKSPACE_ID,
+  name: 'Nosso casamento',
+  slug: 'nosso-casamento',
+  isDemoWorkspace: false,
+  ownerId: PRIVATE_USER_ID,
+  createdAt: '2026-01-01',
+  updatedAt: '2026-01-01',
+};
+
+const privateMembership: Membership = {
+  id: 'lacora-couple-membership',
+  workspaceId: PRIVATE_WORKSPACE_ID,
+  userId: PRIVATE_USER_ID,
+  userName: 'Nós dois',
+  userEmail: '',
+  role: 'casal_admin',
+  permissions: {
+    canEditBudget: true,
+    canEditGuests: true,
+    canEditVisualIdentity: true,
+    canEditTasks: true,
+    canEditVendors: true,
+    canEditContracts: true,
+    canManageTeam: true,
+  },
+  invitedAt: '2026-01-01',
+  status: 'ativo',
+};
+
 function appUserFromSupabase(user: any): User {
   return {
     id: user.id,
@@ -396,183 +425,77 @@ async function authenticatedWorkspaceState(
 
 export const useAppStore = create<AppStoreState>()(
     (set, get) => ({
-      // Auth Initial State
-      currentUser: null,
-      isAuthenticated: false,
+      // Single private workspace for the couple. The access cookie is enforced by proxy.ts.
+      currentUser: privateUser,
+      isAuthenticated: true,
+      activeWorkspaceId: PRIVATE_WORKSPACE_ID,
+      workspaces: [privateWorkspace],
+      memberships: [privateMembership],
 
-      // Initial Workspaces & Memberships (Fictional Demo Workspace)
-      activeWorkspaceId: DEMO_WORKSPACE_ID,
-      workspaces: [
-        {
-          id: DEMO_WORKSPACE_ID,
-          name: 'Casamento Modelo (Demonstração)',
-          slug: 'alex-taylor-demo',
-          isDemoWorkspace: true,
-          ownerId: 'demo-user-owner',
-          createdAt: '2026-01-01',
-          updatedAt: '2026-07-26',
-        },
-      ],
-      memberships: [
-        {
-          id: 'mem-demo-1',
-          workspaceId: DEMO_WORKSPACE_ID,
-          userId: 'demo-user-owner',
-          userName: 'Alex Silva',
-          userEmail: 'alex@exemplo.example',
-          role: 'casal_admin',
-          permissions: {
-            canEditBudget: true,
-            canEditGuests: true,
-            canEditVisualIdentity: true,
-            canEditTasks: true,
-            canEditVendors: true,
-            canEditContracts: true,
-            canManageTeam: true,
-          },
-          invitedAt: '2026-01-01',
-          status: 'ativo',
-        },
-      ],
-
-      // Demo Data Collections
-      coupleProfile: demoCoupleProfile,
-      palette: demoPalette,
-      venues: demoVenues,
-      outfits: demoOutfits,
-      households: demoHouseholds,
-      guests: demoGuests,
-      tables: demoTables,
+      // A clean local-first workspace. It is restored from localStorage on mount.
+      coupleProfile: privateWorkspaceBase.coupleProfile as CoupleProfile,
+      palette: privateWorkspaceBase.palette as Palette,
+      venues: [],
+      outfits: [],
+      households: [],
+      guests: [],
+      tables: [],
       seats: [],
-      tasks: demoTasks,
-      vendors: demoVendors,
-      budgetItems: demoBudgetItems,
-      payments: demoPayments,
-      timeline: demoTimeline,
-      documents: demoDocuments,
-      gifts: demoGifts,
-      photoShots: demoPhotoShots,
-      notifications: demoNotifications,
-      activityLogs: demoActivityLog,
-      moodboard: [
-        {
-          id: 'mb1',
-          workspaceId: DEMO_WORKSPACE_ID,
-          category: 'flores',
-          imageUrl: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=600&q=80',
-          title: 'Arranjos Altos com Orquídeas e Eucalipto',
-          votesCount: 5,
-        },
-      ],
-      decorItems: [
-        {
-          id: 'dec1',
-          workspaceId: DEMO_WORKSPACE_ID,
-          section: 'altar',
-          title: 'Arco Botânico Desconstruído na Paleta Marsala',
-          referenceColor: '#8B263E',
-          floralsOrMaterials: 'Rosas, Eucaliptos e Orquídeas',
-          quantity: 1,
-          rentalOrPurchase: 'aluguel',
-          cost: 4500,
-        },
-      ],
-      menuItems: [
-        {
-          id: 'mi1',
-          workspaceId: DEMO_WORKSPACE_ID,
-          course: 'prato_principal',
-          title: 'Medalhão de Mignon ao Molho Roti com Risoto',
-          description: 'Opção principal degustada e aprovada',
-          isVegetarian: false,
-          isVegan: false,
-          isGlutenFree: true,
-          isNutFree: true,
-          tastingApproved: true,
-        },
-      ],
-      stationeryItems: [
-        {
-          id: 'sti1',
-          workspaceId: DEMO_WORKSPACE_ID,
-          title: 'Save the date digital',
-          category: 'save_the_date',
-          status: 'entregue',
-          quantity: 1,
-          dueDate: '2026-04-15',
-          vendorName: 'Estúdio de papelaria',
-        },
-        {
-          id: 'sti2',
-          workspaceId: DEMO_WORKSPACE_ID,
-          title: 'Convite principal em papel algodão',
-          category: 'convite',
-          status: 'producao',
-          quantity: 90,
-          dueDate: '2026-09-10',
-          vendorName: 'Ateliê gráfico',
-        },
-        {
-          id: 'sti3',
-          workspaceId: DEMO_WORKSPACE_ID,
-          title: 'Manual dos padrinhos',
-          category: 'padrinhos',
-          status: 'aprovacao',
-          quantity: 12,
-          dueDate: '2026-08-20',
-        },
-      ],
-      risks: [
-        {
-          id: 'rk1',
-          workspaceId: DEMO_WORKSPACE_ID,
-          description: 'Chuva forte no horário da cerimônia ao ar livre',
-          category: 'clima',
-          probability: 'media',
-          impact: 'alto',
-          ownerName: 'Cerimonialista Responsável',
-          triggerEvent: 'Previsão do tempo superior a 60% de chuva',
-          preventivePlan: 'Instalação da cobertura envidraçada na pergola 24h antes',
-          responsePlan: 'Mudar a cerimônia para a área coberta às 13:30h',
-          status: 'mitigado',
-        },
-      ],
-      civilInfo: {
-        workspaceId: DEMO_WORKSPACE_ID,
-        cartorioName: 'Cartório de Registro Civil das Pessoas Naturais',
-        cartorioCity: 'São Paulo',
-        cartorioState: 'SP',
-        regimeDeBens: 'comunhao_parcial',
-        hasPactoAntenupcial: false,
-        processStatus: 'habilitado',
-        expirationDate: '2027-12-10',
-        checklists: [
-          { id: 'c1', title: 'Certidões de nascimento atualizadas (90 dias)', completed: true },
-          { id: 'c2', title: 'Comprovantes de residência dos noivos', completed: true },
-          { id: 'c3', title: 'RG e CPF das 2 testemunhas', completed: true },
-        ],
-      },
-
-      websiteSettings: {
-        title: 'Casamento Alex & Taylor',
-        storyText: 'Nos conhecemos em um evento de trabalho e decidimos compartilhar a vida juntos.',
-        dressCodeNotes: 'Traje Passeio Completo / Semi-Formal',
-        lodgingNotes: 'Indicação de hotéis parceiros na região',
-        isPublished: true,
-        customSlug: 'alex-taylor-demo',
-      },
+      tasks: [],
+      vendors: [],
+      budgetItems: [],
+      payments: [],
+      timeline: [],
+      documents: [],
+      gifts: [],
+      photoShots: [],
+      notifications: [],
+      activityLogs: [],
+      moodboard: [],
+      decorItems: [],
+      menuItems: [],
+      stationeryItems: [],
+      risks: [],
+      civilInfo: privateWorkspaceBase.civilInfo as CivilWeddingInfo,
+      websiteSettings: privateWorkspaceBase.websiteSettings as AppStoreState['websiteSettings'],
 
       // Auth Implementation
       initializeSession: async () => {
-        const { data, error } = await SupabaseService.getCurrentUser();
-        if (error || !data.user) return;
+        if (typeof window === 'undefined') return;
+        const restoredState: Partial<AppStoreState> = {};
+        try {
+          const rawSnapshot = window.localStorage.getItem(LOCAL_SNAPSHOT_KEY);
+          const snapshot = rawSnapshot ? JSON.parse(rawSnapshot) : null;
+          for (const key of SNAPSHOT_KEYS) {
+            if (snapshot && Object.prototype.hasOwnProperty.call(snapshot, key)) {
+              (restoredState as any)[key] = snapshot[key];
+            }
+          }
+        } catch {
+          window.localStorage.removeItem(LOCAL_SNAPSHOT_KEY);
+        }
 
         try {
-          const workspaceState = await authenticatedWorkspaceState(data.user);
-          set(workspaceState);
-        } catch (workspaceError) {
-          console.error('Falha ao inicializar sessão:', workspaceError);
+          const response = await fetch('/api/workspace', { cache: 'no-store' });
+          if (response.ok) {
+            const cloud = await response.json();
+            for (const key of SNAPSHOT_KEYS) {
+              if (cloud.snapshot && Object.prototype.hasOwnProperty.call(cloud.snapshot, key)) {
+                (restoredState as any)[key] = cloud.snapshot[key];
+              }
+            }
+          }
+        } catch {
+          // The local snapshot keeps the planner usable during a temporary outage.
         }
+        set({
+          ...restoredState,
+          currentUser: privateUser,
+          isAuthenticated: true,
+          activeWorkspaceId: PRIVATE_WORKSPACE_ID,
+          workspaces: [privateWorkspace],
+          memberships: [privateMembership],
+        });
       },
 
       login: async (email, pass) => {
@@ -659,9 +582,8 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       logout: async () => {
-        await SupabaseService.signOutUser();
-        await fetch('/api/demo/session', { method: 'DELETE' }).catch(() => undefined);
-        set({ currentUser: null, isAuthenticated: false, activeWorkspaceId: DEMO_WORKSPACE_ID });
+        await fetch('/api/access/logout', { method: 'POST' }).catch(() => undefined);
+        set({ currentUser: null, isAuthenticated: false });
       },
 
       verifyEmail: async () => {
@@ -696,72 +618,12 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       deleteAccount: async (pass) => {
-        if (!pass) return { success: false, error: 'Confirme sua senha para excluir a conta.' };
-        const response = await fetch('/api/account', {
-          method: 'DELETE',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ password: pass }),
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          return { success: false, error: result.error || 'Não foi possível excluir a conta.' };
-        }
-        set({ currentUser: null, isAuthenticated: false, activeWorkspaceId: DEMO_WORKSPACE_ID });
-        return { success: true };
+        void pass;
+        return { success: false, error: 'Este espaço privado não usa contas.' };
       },
 
       enterDemoMode: async () => {
-        const response = await fetch('/api/demo/session', { method: 'POST' });
-        if (!response.ok) {
-          return { success: false, error: 'Não foi possível iniciar a demonstração.' };
-        }
-        set({
-          currentUser: null,
-          isAuthenticated: false,
-          activeWorkspaceId: DEMO_WORKSPACE_ID,
-          coupleProfile: demoCoupleProfile,
-          palette: demoPalette,
-          venues: demoVenues,
-          outfits: demoOutfits,
-          households: demoHouseholds,
-          guests: demoGuests,
-          tables: demoTables,
-          seats: [],
-          tasks: demoTasks,
-          vendors: demoVendors,
-          budgetItems: demoBudgetItems,
-          payments: demoPayments,
-          timeline: demoTimeline,
-          documents: demoDocuments,
-          gifts: demoGifts,
-          photoShots: demoPhotoShots,
-          notifications: demoNotifications,
-          activityLogs: demoActivityLog,
-          moodboard: [],
-          decorItems: [],
-          menuItems: [],
-          risks: [],
-          stationeryItems: [],
-          civilInfo: {
-            workspaceId: DEMO_WORKSPACE_ID,
-            cartorioName: '',
-            cartorioCity: '',
-            cartorioState: '',
-            regimeDeBens: 'comunhao_parcial',
-            hasPactoAntenupcial: false,
-            processStatus: 'documentos_pendentes',
-            checklists: [],
-          },
-          websiteSettings: {
-            title: 'Casamento Alex & Taylor',
-            storyText: 'Nos conhecemos em um evento de trabalho e decidimos compartilhar a vida juntos.',
-            dressCodeNotes: 'Traje passeio completo / semi-formal',
-            lodgingNotes: 'Indicações de hospedagem e transporte na região.',
-            isPublished: true,
-            customSlug: 'alex-taylor-demo',
-          },
-        });
-        return { success: true };
+        return { success: false, error: 'A demonstração foi removida.' };
       },
 
       // Workspace & Membership Management
@@ -847,9 +709,7 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       isReadOnlyMode: () => {
-        const { workspaces, activeWorkspaceId } = get();
-        const activeWs = workspaces.find((w) => w.id === activeWorkspaceId);
-        return !!activeWs?.isDemoWorkspace || activeWorkspaceId === DEMO_WORKSPACE_ID;
+        return false;
       },
 
       // Module CRUD Actions
@@ -1324,7 +1184,7 @@ export const useAppStore = create<AppStoreState>()(
     })
 );
 
-let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null;
+let localSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 function snapshotFromState(state: AppStoreState): Record<string, unknown> {
   const payload: Record<string, unknown> = {};
@@ -1334,27 +1194,24 @@ function snapshotFromState(state: AppStoreState): Record<string, unknown> {
 
 if (typeof window !== 'undefined') {
   useAppStore.subscribe((state, previousState) => {
-    if (
-      !state.isAuthenticated ||
-      state.isReadOnlyMode() ||
-      state.activeWorkspaceId === DEMO_WORKSPACE_ID
-    ) {
-      return;
-    }
+    if (!state.isAuthenticated || state.activeWorkspaceId !== PRIVATE_WORKSPACE_ID) return;
 
     const changed = SNAPSHOT_KEYS.some((key) => state[key] !== previousState[key]);
     if (!changed) return;
 
-    if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
-    cloudSaveTimer = setTimeout(async () => {
+    if (localSaveTimer) clearTimeout(localSaveTimer);
+    localSaveTimer = setTimeout(() => {
       const currentState = useAppStore.getState();
-      if (!currentState.isAuthenticated || currentState.isReadOnlyMode()) return;
-
-      const { error } = await SupabaseService.saveWorkspaceSnapshot(
-        currentState.activeWorkspaceId,
-        snapshotFromState(currentState)
+      if (!currentState.isAuthenticated) return;
+      window.localStorage.setItem(
+        LOCAL_SNAPSHOT_KEY,
+        JSON.stringify(snapshotFromState(currentState))
       );
-      if (error) console.error('Falha ao salvar o workspace:', error.message);
-    }, 600);
+      void fetch('/api/workspace', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ snapshot: snapshotFromState(currentState) }),
+      }).catch(() => undefined);
+    }, 300);
   });
 }

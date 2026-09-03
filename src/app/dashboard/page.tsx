@@ -5,16 +5,13 @@ import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { formatBRL, getDaysCountdown } from '@/lib/utils';
 import {
-  Heart,
   CheckSquare,
   Users,
   DollarSign,
-  Briefcase,
   Clock,
   ChevronRight,
   TrendingUp,
   Wine,
-  Shield,
   Compass,
   Info
 } from 'lucide-react';
@@ -33,17 +30,10 @@ export default function DashboardPage() {
     guests,
     budgetItems,
     activityLogs,
-    workspaces,
-    activeWorkspaceId,
     getConfirmedGuestsCount,
     getCostPerGuestMetrics,
     getBuffetEstimates,
-    getCurrentRole
   } = useAppStore();
-
-  const currentRole = getCurrentRole();
-  const activeWs = workspaces.find((w) => w.id === activeWorkspaceId);
-  const isDemo = activeWs?.isDemoWorkspace;
 
   const countdown = getDaysCountdown(coupleProfile.weddingDate);
   const days = countdown.days;
@@ -64,58 +54,11 @@ export default function DashboardPage() {
   const completedTasks = tasks.filter((task) => task.status === 'concluida').length;
   const taskCompletion = tasks.length ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
-  // Role Restriction Message if Vendor
-  if (currentRole === 'fornecedor') {
-    return (
-      <div className="bg-surface p-8 rounded-3xl border border-border text-center shadow-card max-w-xl mx-auto my-12 space-y-4">
-        <Briefcase className="w-10 h-10 text-marsala-500 mx-auto" />
-        <h2 className="font-serif text-xl font-bold text-charcoal">Portal do Fornecedor Contratado</h2>
-        <p className="text-xs text-slate-600">
-          Você possui acesso restrito ao contrato, cronograma de entregáveis e parcelas de pagamento do seu serviço.
-        </p>
-      </div>
-    );
-  }
-
-  // Role Restriction Message if Guest
-  if (currentRole === 'convidado') {
-    return (
-      <div className="bg-surface p-8 rounded-3xl border border-border text-center shadow-card max-w-xl mx-auto my-12 space-y-4">
-        <Heart className="w-10 h-10 text-marsala-500 mx-auto" />
-        <h2 className="font-serif text-xl font-bold text-charcoal">Área do Convidado</h2>
-        <p className="text-xs text-slate-600">
-          Bem-vindo ao espaço de {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}. Confirme sua presença no RSVP online.
-        </p>
-        <Link
-          href="/site"
-          className="inline-block px-6 py-2.5 bg-marsala-500 text-white font-bold text-xs rounded-xl shadow-card hover:bg-marsala-600"
-        >
-          Acessar Site do Casal & RSVP
-        </Link>
-      </div>
-    );
-  }
-
   // Empty State for New Workspace
-  const isEmptyWorkspace = guests.length === 0 && tasks.length === 0 && budgetItems.length === 0 && !isDemo;
+  const isEmptyWorkspace = guests.length === 0 && tasks.length === 0 && budgetItems.length === 0;
 
   return (
     <div className="space-y-8">
-      {/* Demo Workspace Banner */}
-      {isDemo && (
-        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-amber-700 shrink-0" />
-            <span>
-              <strong>Modo de Demonstração Fictício:</strong> Este é um workspace descartável de teste com dados modelo isolados.
-            </span>
-          </div>
-          <Link href="/onboarding" className="font-bold text-amber-800 hover:underline shrink-0">
-            Criar Meu Casamento Real
-          </Link>
-        </div>
-      )}
-
       {/* Open page introduction — deliberately not wrapped in a floating box */}
       <div className="relative overflow-hidden border-b border-border pb-7">
         <LacoraMark className="absolute -right-3 -top-9 h-36 w-36 opacity-[0.08]" />
@@ -156,13 +99,13 @@ export default function DashboardPage() {
           <Compass className="w-10 h-10 text-marsala-500 mx-auto" />
           <h2 className="font-serif text-xl font-bold text-charcoal">Seu Casamento está Prontinho para Começar!</h2>
           <p className="text-xs text-slate-600 max-w-md mx-auto">
-            Você ainda não cadastrou tarefas, convidados ou orçamento. Preencha o onboarding com seus dados reais para gerar sua estrutura inicial personalizada.
+            Comecem pelos dados do casal e pela data. Depois, usem as áreas de tarefas, convidados e orçamento no ritmo de vocês.
           </p>
           <Link
-            href="/onboarding"
+            href="/configuracoes"
             className="inline-flex items-center gap-2 px-6 py-3 bg-marsala-500 text-white font-bold text-xs rounded-xl shadow-card hover:bg-marsala-600 transition-colors"
           >
-            <Compass className="w-4 h-4" /> Iniciar Onboarding Personalizado
+            <Compass className="w-4 h-4" /> Adicionar nossos dados
           </Link>
         </div>
       )}

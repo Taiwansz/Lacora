@@ -5,16 +5,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   if (!baseUrl) return [];
 
-  const publicRoutes = [
-    '',
-    '/termos',
-    '/privacidade',
-    '/suporte',
-    '/contato',
-    '/login',
-    '/cadastro',
-    '/recuperar-senha',
-  ];
+  const publicRoutes = ['', '/presentes'];
 
   return publicRoutes.map((route) => ({
     url: `${baseUrl}${route}`,

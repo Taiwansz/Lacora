@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { getDaysCountdown } from '@/lib/utils';
-import { Bell, LogOut, Lock, User as UserIcon } from 'lucide-react';
+import { Bell, LogOut, User as UserIcon } from 'lucide-react';
 import { navGroups } from './Sidebar';
 
 export const Header: React.FC = () => {
@@ -19,17 +19,9 @@ export const Header: React.FC = () => {
   const {
     coupleProfile,
     currentUser,
-    getCurrentRole,
     logout,
     notifications,
-    workspaces,
-    activeWorkspaceId,
-    isReadOnlyMode,
   } = useAppStore();
-
-  const currentRole = getCurrentRole();
-  const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
-  const isDemo = activeWorkspace?.isDemoWorkspace || isReadOnlyMode();
 
   const countdown = getDaysCountdown(coupleProfile.weddingDate);
   const days = countdown.days;
@@ -40,32 +32,8 @@ export const Header: React.FC = () => {
     navGroups.flatMap((group) => group.items).find((item) => item.href === pathname)?.label ||
     'Planejamento';
 
-  const roleDisplayMap: Record<string, string> = {
-    casal_admin: 'Administrador do Casal',
-    parceiro: 'Parceiro / Cônjuge',
-    cerimonialista: 'Cerimonial / Assessoria',
-    assessor: 'Assessor de Eventos',
-    familiar: 'Familiar',
-    colaborador: 'Colaborador',
-    fornecedor: 'Fornecedor Contratado',
-    convidado: 'Convidado',
-    admin_geral: 'Administrador Geral',
-  };
-
   return (
     <>
-      {isDemo && (
-        <div className="bg-[#D8A15D] text-[#302824] font-semibold text-xs py-1.5 px-4 text-center flex items-center justify-center gap-2 border-b border-[#B78245] no-print">
-          <Lock className="w-3.5 h-3.5" />
-          <span>Modo de Demonstração (Apenas Leitura) — Nenhuma alteração é salva.</span>
-          <Link
-            href="/cadastro"
-            className="ml-2 bg-[#213D36] text-white px-2.5 py-0.5 rounded text-[11px] font-bold hover:bg-[#17342E] transition-colors"
-          >
-            Criar Conta Grátis
-          </Link>
-        </div>
-      )}
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border/70 px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-3.5 flex items-center justify-between no-print">
         {/* Couple & Workspace Info */}
         <div className="min-w-0">
@@ -77,11 +45,6 @@ export const Header: React.FC = () => {
               <p className="font-serif text-charcoal text-lg lg:text-xl leading-none tracking-[-0.02em]">
                 {activePage}
               </p>
-              {isDemo && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#F1D5B9] text-[#7A3A24] border border-[#D8A982]">
-                  DEMONSTRAÇÃO
-                </span>
-              )}
             </div>
             <p className="text-[11px] text-[#756B5E] mt-1 truncate">
               {coupleProfile.partner1Name || 'Noivo(a) 1'} & {coupleProfile.partner2Name || 'Noivo(a) 2'}
@@ -99,18 +62,16 @@ export const Header: React.FC = () => {
 
         {/* Right Controls */}
         <div className="flex items-center gap-3">
-          {/* Active Role Badge */}
+          {/* Couple workspace identity */}
           <div className="hidden lg:flex items-center gap-2 text-xs text-slate-600">
             <div className="h-8 w-8 rounded-full bg-[#213D36] text-[#F4EBDD] flex items-center justify-center border-2 border-white/60 shadow-subtle">
               <UserIcon className="h-3.5 w-3.5" />
             </div>
             <div className="leading-tight">
               <span className="font-semibold text-charcoal text-[11px] block">
-                {currentUser?.name || 'Minha conta'}
+                {currentUser?.name || 'Nós dois'}
               </span>
-              <span className="text-[#817669] text-[9px]">
-                {roleDisplayMap[currentRole] || currentRole}
-              </span>
+              <span className="text-[#817669] text-[9px]">Espaço privado</span>
             </div>
           </div>
 
@@ -134,20 +95,20 @@ export const Header: React.FC = () => {
             <button
               onClick={async () => {
                 await logout();
-                window.location.assign('/login');
+                window.location.assign('/acesso');
               }}
               className="p-2 rounded-lg text-slate-500 hover:text-marsala-500 hover:bg-surface-muted transition-colors flex items-center gap-1 text-xs font-semibold"
-              title="Sair da Conta"
+              title="Bloquear o espaço privado"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden md:inline">Sair</span>
             </button>
           ) : (
             <Link
-              href="/login"
+              href="/acesso"
               className="px-3.5 py-1.5 bg-marsala-500 hover:bg-marsala-600 text-white font-semibold text-xs rounded-lg shadow-card transition-colors"
             >
-              Entrar
+              Acessar
             </Link>
           )}
         </div>

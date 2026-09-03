@@ -48,6 +48,62 @@ h1, h2, h3, .font-serif-title {
   text-transform: uppercase;
 }
 
+.wedding-landing {
+  background:
+    radial-gradient(circle at 92% 8%, rgb(232 210 188 / 54%), transparent 25rem),
+    linear-gradient(180deg, #f4ebdd 0%, #f8f1e7 44%, #f4ebdd 100%);
+}
+
+.wedding-hero-glow {
+  position: absolute;
+  top: 10%;
+  right: 7%;
+  width: min(46vw, 38rem);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: rgb(231 211 187 / 42%);
+  filter: blur(70px);
+}
+
+.wedding-ribbon {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid rgb(184 102 69 / 21%);
+  border-radius: 50%;
+}
+
+.wedding-ribbon-a {
+  top: -17rem;
+  right: -9rem;
+  width: min(62rem, 84vw);
+  height: 46rem;
+  transform: rotate(-18deg);
+}
+
+.wedding-ribbon-b {
+  right: -17rem;
+  bottom: -28rem;
+  width: min(68rem, 92vw);
+  height: 48rem;
+  border-color: rgb(33 61 54 / 14%);
+  transform: rotate(14deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wedding-seal {
+    animation: wedding-breathe 7s ease-in-out infinite alternate;
+  }
+
+  .wedding-seal:nth-child(2) {
+    animation-delay: -2.5s;
+  }
+}
+
+@keyframes wedding-breathe {
+  from { transform: scale(.985) rotate(-1deg); }
+  to { transform: scale(1.025) rotate(1.5deg); }
+}
+
 .brand-button-primary {
   color: white;
   background: rgb(var(--color-accent));

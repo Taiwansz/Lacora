@@ -9,6 +9,8 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
         disallow: [
+          '/acesso',
+          '/api/',
           '/dashboard',
           '/orcamento',
           '/convidados',
@@ -33,6 +35,9 @@ export default function robots(): MetadataRoute.Robots {
           '/assinatura',
           '/auditoria',
           '/configuracoes',
+          '/midia',
+          '/papelaria',
+          '/site',
         ],
       },
     ],
