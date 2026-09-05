@@ -42,43 +42,17 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const password = typeof body.password === 'string' ? body.password.trim() : '';
+  const token = typeof body.token === 'string' ? body.token : '';
   const nextPath = isSafeInternalPath(body.next) ? body.next : '/dashboard';
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  if (!supabaseUrl) {
-    return NextResponse.json({ error: 'Acesso temporariamente indisponível.' }, { status: 503 });
-  }
-
-  const verifier = await fetch(`${supabaseUrl}/functions/v1/private-access`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ password }),
-    cache: 'no-store',
-  }).catch((error) => {
-    console.error('[api/access] private-access request failed', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
-  });
-  const verification = await verifier?.json().catch(() => ({}));
-
-  if (
-    !verifier ||
-    !verifier.ok ||
-    typeof verification.token !== 'string' ||
-    !(await verifyAccessToken(verification.token))
-  ) {
+  if (!(await verifyAccessToken(token))) {
     registerFailure(key);
-    return NextResponse.json(
-      { error: verification?.error || 'Não foi possível validar a senha.' },
-      { status: verifier?.status || 503 }
-    );
+    return NextResponse.json({ error: 'Acesso inválido.' }, { status: 401 });
   }
 
   attempts.delete(key);
   const response = NextResponse.json({ ok: true, next: nextPath });
-  response.cookies.set(ACCESS_COOKIE_NAME, verification.token, {
+  response.cookies.set(ACCESS_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
@@ -87,3 +61,4 @@ export async function POST(request: NextRequest) {
   });
   return response;
 }
+

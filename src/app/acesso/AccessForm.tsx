@@ -3,6 +3,8 @@
 import { FormEvent, useState } from 'react';
 import { ArrowRight, Eye, EyeOff, LockKeyhole } from 'lucide-react';
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+
 export function AccessForm({ nextPath }: { nextPath: string }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -14,10 +16,34 @@ export function AccessForm({ nextPath }: { nextPath: string }) {
     setLoading(true);
     setError('');
 
+    if (!SUPABASE_URL) {
+      setLoading(false);
+      setError('Acesso temporariamente indisponível.');
+      return;
+    }
+
+    // Step 1: Validate password directly with Supabase Edge Function
+    const verification = await fetch(
+      `${SUPABASE_URL}/functions/v1/private-access`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ password: password.trim() }),
+        cache: 'no-store',
+      }
+    ).then((r) => r.json()).catch(() => ({}));
+
+    if (typeof verification.token !== 'string') {
+      setLoading(false);
+      setError(verification?.error || 'Não foi possível validar a senha.');
+      return;
+    }
+
+    // Step 2: Send the verified token to set the httpOnly cookie
     const response = await fetch('/api/access', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ password: password.trim(), next: nextPath }),
+      body: JSON.stringify({ token: verification.token, next: nextPath }),
     });
     const result = await response.json().catch(() => ({}));
 
