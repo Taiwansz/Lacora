@@ -9,7 +9,7 @@ function source(path: string) {
 describe('Acesso privado e experiência pública', () => {
   it('valida a senha somente no servidor e cria um cookie httpOnly limitado', () => {
     const route = source('src/app/api/access/route.ts');
-    expect(route).toContain("runtime = 'edge'");
+    expect(route).not.toContain("runtime = 'edge'");
     expect(route).toContain('/functions/v1/private-access');
     expect(route).toContain('verifyAccessToken');
     expect(route).toContain('body.password');

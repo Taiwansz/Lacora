@@ -6,8 +6,6 @@ import {
 } from '@/lib/access-constants';
 import { verifyAccessToken } from '@/lib/access-token';
 
-export const runtime = 'edge';
-
 const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 6;
 const attempts = new Map<string, { count: number; resetAt: number }>();
